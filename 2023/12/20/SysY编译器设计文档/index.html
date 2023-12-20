@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="SysY编译器设计文档总体结构本编译器采用Java语言编写，将SysY语言翻译成llvm中间代码，分为词法分析、语法分析、错误处理、代码生成四个部分。 文件组织和接口项目结构如下所示 1234567891011├─src│  ├─error			# 错误类别    │  ├─helper			# 输入输出和配置的工具类│  ├─lexer			# lexer和词法分析的表项			│  ├─llvm">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SysY编译器设计文档">
+<meta property="og:url" content="https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/index.html">
+<meta property="og:site_name" content="Aki&#39;s Cottage">
+<meta property="og:description" content="SysY编译器设计文档总体结构本编译器采用Java语言编写，将SysY语言翻译成llvm中间代码，分为词法分析、语法分析、错误处理、代码生成四个部分。 文件组织和接口项目结构如下所示 1234567891011├─src│  ├─error			# 错误类别    │  ├─helper			# 输入输出和配置的工具类│  ├─lexer			# lexer和词法分析的表项			│  ├─llvm">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="c:\Users\xqy\AppData\Roaming\Typora\typora-user-images\image-20231220142055355.png">
+<meta property="og:image" content="https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/%E7%9F%AD%E8%B7%AF%E6%B1%82%E5%80%BC.png">
+<meta property="article:published_time" content="2023-12-20T08:16:16.000Z">
+<meta property="article:modified_time" content="2023-12-20T08:24:08.315Z">
+<meta property="article:author" content="akkkkkkkkki">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="c:\Users\xqy\AppData\Roaming\Typora\typora-user-images\image-20231220142055355.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>SysY编译器设计文档</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Archives</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tags</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/Search/">Search</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2023/09/22/%E6%B4%97%E8%A1%A3%E6%B6%B2%E5%91%B3%E7%9A%84%E9%85%92/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&text=SysY编译器设计文档"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=SysY编译器设计文档"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&is_video=false&description=SysY编译器设计文档"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=SysY编译器设计文档&body=Check out this article: https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=SysY编译器设计文档"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=SysY编译器设计文档"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=SysY编译器设计文档"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=SysY编译器设计文档"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&name=SysY编译器设计文档&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&t=SysY编译器设计文档"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3"><span class="toc-number">1.</span> <span class="toc-text">SysY编译器设计文档</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E4%BD%93%E7%BB%93%E6%9E%84"><span class="toc-number">1.1.</span> <span class="toc-text">总体结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E7%BB%84%E7%BB%87%E5%92%8C%E6%8E%A5%E5%8F%A3"><span class="toc-number">1.2.</span> <span class="toc-text">文件组织和接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90"><span class="toc-number">1.3.</span> <span class="toc-text">词法分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90"><span class="toc-number">1.4.</span> <span class="toc-text">语法分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%94%B9%E5%86%99%E6%96%87%E6%B3%95"><span class="toc-number">1.4.1.</span> <span class="toc-text">改写文法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%80%92%E5%BD%92%E4%B8%8B%E9%99%8D"><span class="toc-number">1.4.2.</span> <span class="toc-text">递归下降</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86"><span class="toc-number">1.5.</span> <span class="toc-text">错误处理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%AD%E6%B3%95%E9%94%99%E8%AF%AF"><span class="toc-number">1.5.1.</span> <span class="toc-text">语法错误</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%AD%E4%B9%89%E9%94%99%E8%AF%AF"><span class="toc-number">1.5.2.</span> <span class="toc-text">语义错误</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%BB%BA%E7%AB%8B%E7%AC%A6%E5%8F%B7%E8%A1%A8"><span class="toc-number">1.5.2.1.</span> <span class="toc-text">建立符号表</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E9%81%8D%E5%8E%86%E8%AF%AD%E6%B3%95%E6%A0%91"><span class="toc-number">1.5.2.2.</span> <span class="toc-text">遍历语法树</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E7%94%9F%E6%88%90"><span class="toc-number">1.6.</span> <span class="toc-text">代码生成</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#llvm%E6%9E%B6%E6%9E%84"><span class="toc-number">1.6.1.</span> <span class="toc-text">llvm架构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82"><span class="toc-number">1.6.2.</span> <span class="toc-text">实现细节</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E7%AC%A6%E5%8F%B7%E8%A1%A8%E7%AE%A1%E7%90%86"><span class="toc-number">1.6.2.1.</span> <span class="toc-text">符号表管理</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#const%E4%BC%98%E5%8C%96"><span class="toc-number">1.6.2.2.</span> <span class="toc-text">const优化</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%95%B0%E7%BB%84"><span class="toc-number">1.6.2.3.</span> <span class="toc-text">数组</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E7%9F%AD%E8%B7%AF%E6%B1%82%E5%80%BC"><span class="toc-number">1.6.2.4.</span> <span class="toc-text">短路求值</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%BE%AA%E7%8E%AF%E8%B7%B3%E8%BD%AC"><span class="toc-number">1.6.2.5.</span> <span class="toc-text">循环跳转</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%99%84%E5%BD%95"><span class="toc-number">1.7.</span> <span class="toc-text">附录</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E6%96%87%E6%B3%95"><span class="toc-number">1.7.1.</span> <span class="toc-text">实验文法</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        SysY编译器设计文档
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">akkkkkkkkki</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2023-12-20T08:16:16.000Z" class="dt-published" itemprop="datePublished">2023-12-20</time>
+        
+      
+    </div>
+
+
+      
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h2 id="SysY编译器设计文档"><a href="#SysY编译器设计文档" class="headerlink" title="SysY编译器设计文档"></a>SysY编译器设计文档</h2><h3 id="总体结构"><a href="#总体结构" class="headerlink" title="总体结构"></a>总体结构</h3><p>本编译器采用Java语言编写，将SysY语言翻译成llvm中间代码，分为词法分析、语法分析、错误处理、代码生成四个部分。</p>
+<h3 id="文件组织和接口"><a href="#文件组织和接口" class="headerlink" title="文件组织和接口"></a>文件组织和接口</h3><p>项目结构如下所示</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">├─src</span><br><span class="line">│  ├─error			# 错误类别    </span><br><span class="line">│  ├─helper			# 输入输出和配置的工具类</span><br><span class="line">│  ├─lexer			# lexer和词法分析的表项			</span><br><span class="line">│  ├─llvm			# LLVM IR定义</span><br><span class="line">│  │  ├─instruction</span><br><span class="line">│  │  ├─type</span><br><span class="line">│  │  └─classes</span><br><span class="line">│  ├─nodes			# AST的各类节点</span><br><span class="line">│  ├─parser			# parser和创建节点相关的类</span><br><span class="line">│  └─Compliler.java		# 入口程序</span><br></pre></td></tr></table></figure>
+
+<p><code>Compiler.java</code>部分代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">input</span> <span class="operator">=</span> <span class="string">&quot;&quot;</span>;</span><br><span class="line">    Helper.init();</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">Path</span> <span class="variable">filePath</span> <span class="operator">=</span> Paths.get(<span class="string">&quot;testfile.txt&quot;</span>);</span><br><span class="line">        input = Files.readString(filePath);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 词法分析</span></span><br><span class="line">    lexer.getInput(input);</span><br><span class="line">    <span class="keyword">while</span>(lexer.next());</span><br><span class="line">    <span class="comment">// 语法树生成</span></span><br><span class="line">    <span class="type">Node</span> <span class="variable">root</span> <span class="operator">=</span> parser.parseCompUnit();</span><br><span class="line">    <span class="comment">// 错误处理</span></span><br><span class="line">    root.handleError();</span><br><span class="line">    Helper.printError();</span><br><span class="line">    <span class="comment">// 如果没有错误进行代码生成</span></span><br><span class="line">    SymbolManager.getManager().reset();</span><br><span class="line">    <span class="keyword">if</span> (!Helper.error) &#123;</span><br><span class="line">        root.generate();</span><br><span class="line">        InstrManager.getInstance().printInstr();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Helper.closeStream();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>大体流程如下：</p>
+<ul>
+<li><p>Lexer类解析源程序，将源程序按照词法解析成一个个<code>Entry</code>，并封装放入<code>EntryTable</code>中（管理token的类）。</p>
+</li>
+<li><p>Parser类根据上一步生成的<code>EntryTable</code>，根据文法生成抽象语法树，并返回根节点<code>root</code>。</p>
+</li>
+<li><p>在parse过程中检查语法错误，而语义错误从root根节点开始，自顶向下递归调用每个节点的<code>handleError</code>方法进行检查（在此过程中生成符号表，由<code>SymBolManager</code>统一管理）。</p>
+</li>
+<li><p>从root开始，自顶向下递归调用每个节点的generate方法生成llvm，由<code>InstrManager</code>统一管理。</p>
+</li>
+</ul>
+<h3 id="词法分析"><a href="#词法分析" class="headerlink" title="词法分析"></a>词法分析</h3><blockquote>
+<p>单词类别码</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>单词名称</th>
+<th>类别码</th>
+<th>单词名称</th>
+<th>类别码</th>
+<th>单词名称</th>
+<th>类别码</th>
+<th>单词名称</th>
+<th>类别码</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Ident</td>
+<td>IDENFR</td>
+<td>!</td>
+<td>NOT</td>
+<td>*</td>
+<td>MULT</td>
+<td>&#x3D;</td>
+<td>ASSIGN</td>
+</tr>
+<tr>
+<td>IntConst</td>
+<td>INTCON</td>
+<td>&amp;&amp;</td>
+<td>AND</td>
+<td>&#x2F;</td>
+<td>DIV</td>
+<td>;</td>
+<td>SEMICN</td>
+</tr>
+<tr>
+<td>FormatString</td>
+<td>STRCON</td>
+<td>||</td>
+<td>OR</td>
+<td>%</td>
+<td>MOD</td>
+<td>,</td>
+<td>COMMA</td>
+</tr>
+<tr>
+<td>main</td>
+<td>MAINTK</td>
+<td>for</td>
+<td>FORTK</td>
+<td>&lt;</td>
+<td>LSS</td>
+<td>(</td>
+<td>LPARENT</td>
+</tr>
+<tr>
+<td>const</td>
+<td>CONSTTK</td>
+<td>getint</td>
+<td>GETINTTK</td>
+<td>&lt;&#x3D;</td>
+<td>LEQ</td>
+<td>)</td>
+<td>RPARENT</td>
+</tr>
+<tr>
+<td>int</td>
+<td>INTTK</td>
+<td>printf</td>
+<td>PRINTFTK</td>
+<td>&gt;</td>
+<td>GRE</td>
+<td>[</td>
+<td>LBRACK</td>
+</tr>
+<tr>
+<td>break</td>
+<td>BREAKTK</td>
+<td>return</td>
+<td>RETURNTK</td>
+<td>&gt;&#x3D;</td>
+<td>GEQ</td>
+<td>]</td>
+<td>RBRACK</td>
+</tr>
+<tr>
+<td>continue</td>
+<td>CONTINUETK</td>
+<td>+</td>
+<td>PLUS</td>
+<td>&#x3D;&#x3D;</td>
+<td>EQL</td>
+<td>{</td>
+<td>LBRACE</td>
+</tr>
+<tr>
+<td>if</td>
+<td>IFTK</td>
+<td>-</td>
+<td>MINU</td>
+<td>!&#x3D;</td>
+<td>NEQ</td>
+<td>}</td>
+<td>RBRACE</td>
+</tr>
+<tr>
+<td>else</td>
+<td>ELSETK</td>
+<td>void</td>
+<td>VOIDTK</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>词法分析主要由<code>Lexer</code>类实现，该类的几个主要属性如下：</p>
+<ul>
+<li>input：输入文件字符串</li>
+<li>pos：当前解析位置字符串指针</li>
+<li>curToken：当前解析单词</li>
+<li>lineNum：当前行号</li>
+</ul>
+<p>最终生成单词输入流保存在<code>EntryTable</code>中，每个<code>Entry</code>的属性包括：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Entry</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> lineNum;</span><br><span class="line">    <span class="keyword">private</span> Category category; <span class="comment">// 类别码</span></span><br><span class="line">    <span class="keyword">private</span> String value;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先将输入文件读到input字符串里面，然后调用<code>next()</code>函数不断的挨个读取字符，根据读到字符先后判断注释、操作符、数字、单词、换行符以及多余字符<code>\r, \t, \space</code>，在各个if分支中再调用子函数继续读取，将一个个单词包装成<code>Entry</code>类加入到<code>EntryTable</code>中，读到文件末尾时返回<code>flase</code>。大体逻辑如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">next</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (pos == input.length()) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">char</span> <span class="variable">ch</span> <span class="operator">=</span> input.charAt(pos);</span><br><span class="line">    <span class="keyword">if</span> (qMarks.indexOf(ch) != -<span class="number">1</span>) &#123; <span class="comment">// qMarks = &quot;&#x27;&#x27;\&quot;\&quot;&quot;;</span></span><br><span class="line">        curToken = getString(ch);</span><br><span class="line">        <span class="type">Entry</span> <span class="variable">string</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Entry</span>(lineNum, Category.STRCON, curToken);</span><br><span class="line">        table.add(string); </span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (operators.indexOf(ch) != -<span class="number">1</span>) &#123; <span class="comment">// operators = &quot;+-*/!&amp;|%&lt;=&gt;;,()[]&#123;&#125;&quot;;</span></span><br><span class="line">        <span class="keyword">if</span> (ch == <span class="string">&#x27;/&#x27;</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (getAnnotation()) &#123;</span><br><span class="line">                <span class="comment">//注释</span></span><br><span class="line">                curToken = <span class="string">&quot;&quot;</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="type">Entry</span> <span class="variable">div</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Entry</span>(lineNum, Category.DIV, <span class="string">&quot;/&quot;</span>);</span><br><span class="line">                table.add(div);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            table.add(getOperator());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (Character.isDigit(ch)) &#123;</span><br><span class="line">        curToken = getNumber();</span><br><span class="line">        <span class="type">Entry</span> <span class="variable">number</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Entry</span>(lineNum, Category.INTCON, curToken); <span class="comment">// 设置单词类别</span></span><br><span class="line">        table.add(number);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (Character.isLetter(ch) || ch == <span class="string">&#x27;_&#x27;</span>) &#123;</span><br><span class="line">        curToken = getWord();</span><br><span class="line">        table.add(reserve(curToken)); <span class="comment">// 读取word之后判断是否是保留字</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (ch == <span class="string">&#x27;\n&#x27;</span>) &#123;</span><br><span class="line">        pos++;</span><br><span class="line">        lineNum++;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (ch == <span class="string">&#x27; &#x27;</span> || ch == <span class="string">&#x27;\r&#x27;</span> || ch == <span class="string">&#x27;\t&#x27;</span>) &#123;</span><br><span class="line">        ++pos;</span><br><span class="line">        next();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;error in next()!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125; <span class="comment">// Lexer.java</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>注意</strong></p>
+<ul>
+<li><p>对于<code>\r</code>的判断，读到<code>\n</code>的时候维护当前行号；</p>
+</li>
+<li><p>对于operators有两种情况，<code>+, -</code>等单个char的运算符和<code>==, &gt;=</code>这种两个char的；</p>
+</li>
+<li><p>在<code>getAnnotation()</code>方法中也需要维护<code>lineNum</code>；</p>
+</li>
+<li><p><code>getWord()</code>判断完之后还需要判断是否是保留字</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Entry <span class="title function_">reserve</span><span class="params">(String word)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (categoryMap.get(word) != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Entry</span>(lineNum, categoryMap.get(word), word);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Entry</span>(lineNum, Category.IDENFR, word);</span><br><span class="line">&#125; <span class="comment">//Lexer.java</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="语法分析"><a href="#语法分析" class="headerlink" title="语法分析"></a>语法分析</h3><p>语法分析主要由<code>Parser</code>类实现，从词法分析得到的<code>EntryTable</code>中循环读入单词（<code>curPos</code>指向即将读到的单词），递归下降进行解析，然后建立抽象语法树。</p>
+<p><code>Node</code>类属性如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Node</span> &#123;</span><br><span class="line">    <span class="keyword">protected</span> <span class="type">int</span> startNum;</span><br><span class="line">    <span class="keyword">protected</span> <span class="type">int</span> endNum;</span><br><span class="line">    <span class="keyword">protected</span> NodeType type;</span><br><span class="line">    <span class="keyword">protected</span> ArrayList&lt;Node&gt; children;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其他节点类都继承<code>Node</code>。</p>
+<h4 id="改写文法"><a href="#改写文法" class="headerlink" title="改写文法"></a>改写文法</h4><p>建立语法树时需要按照文法对每个终结符和非终结符建立节点，为了消除左递归和方便后期代码编写，首先对文法进行改写：</p>
+<ul>
+<li><p>将<code>Stmt</code>的产生式改写为<code>Stmt -&gt; AssignStmt | ExpStmt | BlockStmt | IfStmt | ForStmt | BreakStmt | ContinueStmt | ReturnStmt | GetIntStmt | PrintfStmt</code>；</p>
+</li>
+<li><p>for循环<code>&#39;for&#39; &#39;(&#39; [ForStmt] &#39;;&#39; [Cond] &#39;;&#39; [forStmt] &#39;)&#39; Stmt</code>改写为<code>&#39;for&#39; &#39;(&#39;[ForInit] &#39;;&#39; [Cond] &#39;;&#39; [ForInit] &#39;)&#39; Stmt</code>；</p>
+</li>
+<li><p>将<code>AddExp</code>使用巴克斯范式范式改写为<code>AddExp -&gt; MulExp &#123;(&#39;+&#39; | &#39;-&#39;) MulExp&#125;</code>，<code>MulExp，RelExp, EqExp, LAndExp, LOrExp</code>同理；</p>
+</li>
+<li><p>将所有的终结符包装成一个类<code>TerminalNode</code>；</p>
+</li>
+<li><p>删除<code>BType</code>，将其加入<code>TerminalNode</code>类中；</p>
+</li>
+</ul>
+<h4 id="递归下降"><a href="#递归下降" class="headerlink" title="递归下降"></a>递归下降</h4><p>按照每条文法进行程序的编写，示例如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//  CompUnit → &#123;Decl&#125; &#123;FuncDef&#125; MainFuncDef</span></span><br><span class="line"><span class="keyword">public</span> Node <span class="title function_">parseCompUnit</span><span class="params">()</span> &#123;</span><br><span class="line">    ArrayList&lt;Node&gt; children = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">    <span class="type">int</span> <span class="variable">startNum</span> <span class="operator">=</span> entryTable.getCurLine();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (entryTable.check(NodeType.MainFuncDef)) &#123;</span><br><span class="line">            <span class="comment">// main函数</span></span><br><span class="line">             children.add(parseMainFuncDef());</span><br><span class="line">             <span class="keyword">break</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (entryTable.check(NodeType.FuncDef)) &#123;</span><br><span class="line">            <span class="comment">// FuncDef</span></span><br><span class="line">            children.add(parseFuncDef());</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (entryTable.check(NodeType.Decl)) &#123;</span><br><span class="line">            <span class="comment">// Decl</span></span><br><span class="line">            children.add(parseDecl());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> <span class="variable">endNum</span> <span class="operator">=</span> entryTable.getCurLine(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">return</span> NodeFactory.createNode(startNum, endNum, NodeType.CompUnit, children);</span><br><span class="line">&#125; <span class="comment">// Parser.java</span></span><br></pre></td></tr></table></figure>
+
+<p>最后返回节点的时候的时候使用工厂模式生成节点，<code>createNode()</code>如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Node <span class="title function_">createNode</span><span class="params">(<span class="type">int</span> start, <span class="type">int</span> end, NodeType nodeType, ArrayList&lt;Node&gt; children)</span> &#123;</span><br><span class="line">    Helper.printParser(<span class="string">&quot;&lt;&quot;</span> + nodeType.toString() + <span class="string">&quot;&gt;\n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">switch</span> (nodeType) &#123;</span><br><span class="line">        <span class="keyword">case</span> CompUnit -&gt; <span class="keyword">new</span> <span class="title class_">CompUnitNode</span>(start, end, nodeType, children);</span><br><span class="line">        <span class="keyword">case</span> Decl -&gt; <span class="keyword">new</span> <span class="title class_">DeclNode</span>(start, end, nodeType, children);</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">        <span class="keyword">default</span> -&gt; <span class="literal">null</span>;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125; <span class="comment">// NodeFactory.java</span></span><br></pre></td></tr></table></figure>
+
+<p>在解析过程中需要向前看进行语法成分的判断，我将这一逻辑包装到了<code>EntryTable</code>不同的<code>check()</code>方法中，用于判断是否是相应的语法成分或者字符或者类别码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">check</span><span class="params">(NodeType nodeType)</span> &#123;</span><br><span class="line">    <span class="keyword">switch</span> (nodeType) &#123;</span><br><span class="line">        <span class="keyword">case</span> MainFuncDef -&gt; &#123;</span><br><span class="line">            <span class="keyword">return</span> entries.get(curPos + <span class="number">1</span>).getCategory() == Category.MAINTK;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">case</span> Decl -&gt; &#123;</span><br><span class="line">            <span class="keyword">return</span> check(NodeType.ConstDecl) || check(NodeType.VarDecl);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">case</span> FuncDef -&gt; &#123;</span><br><span class="line">            <span class="keyword">return</span> (entries.get(curPos).getCategory() == Category.VOIDTK || entries.get(curPos).getCategory() == Category.INTTK)</span><br><span class="line">                    &amp;&amp; entries.get(curPos + <span class="number">1</span>).getCategory() == Category.IDENFR</span><br><span class="line">                    &amp;&amp; entries.get(curPos + <span class="number">2</span>).getCategory() == Category.LPARENT;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">case</span> ConstDecl -&gt; &#123;</span><br><span class="line">            <span class="keyword">return</span> entries.get(curPos).getCategory() == Category.CONSTTK; </span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">case</span> ConstInitVal -&gt; &#123;</span><br><span class="line">            <span class="keyword">return</span> check(NodeType.ConstExp) || entries.get(curPos).getCategory() == Category.LBRACE; <span class="comment">//*****第二种情况可能和block相同</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">        <span class="keyword">default</span> -&gt; &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">check</span><span class="params">(String terminal)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> Objects.equals(terminal, entries.get(curPos).getValue());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">check</span><span class="params">(Category category)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> Objects.equals(entries.get(curPos).getCategory(), category);</span><br><span class="line">&#125; <span class="comment">// EntryTable.java</span></span><br></pre></td></tr></table></figure>
+
+<p>同时，需要注意在<code>stmt</code>的判断中，<code>assign,getint,exp</code>三种情况有重合，需要解析一个表达式之后才能进行判断，于是在进入这三种情况的时候，首先对<code>EntryTable</code>设置成为readonly模式，然后调用<code>parseExp</code>，然后再判断是哪种表达式，识别成功之后返回readonly处。逻辑如下:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Node <span class="title function_">parseStmt</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (entryTable.check(<span class="string">&quot;if&quot;</span>)) &#123;</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        ArrayList&lt;Node&gt; children = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">        <span class="type">int</span> <span class="variable">startNum</span> <span class="operator">=</span> entryTable.getCurLine();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// assign || getint || Exp</span></span><br><span class="line">        entryTable.readOnly();</span><br><span class="line">        parseExp();</span><br><span class="line">        <span class="keyword">if</span> (entryTable.check(<span class="string">&quot;=&quot;</span>)) &#123;</span><br><span class="line">            entryTable.fetch();</span><br><span class="line">            <span class="keyword">if</span> (entryTable.check(<span class="string">&quot;getint&quot;</span>)) &#123;</span><br><span class="line">                entryTable.back2fetch();</span><br><span class="line">                <span class="comment">// ...</span></span><br><span class="line">                <span class="keyword">return</span> NodeFactory.createNode(startNum, endNum, NodeType.GetintStmt, children);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123; <span class="comment">// assign</span></span><br><span class="line">                entryTable.back2fetch();</span><br><span class="line">                <span class="comment">// ...</span></span><br><span class="line">                <span class="keyword">return</span> NodeFactory.createNode(startNum, endNum, NodeType.AssignStmt, children);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123; <span class="comment">// Exp</span></span><br><span class="line">            entryTable.back2fetch();</span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line">            <span class="keyword">return</span> NodeFactory.createNode(startNum, endNum, NodeType.ExpStmt, children);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="comment">// Parser.java</span></span><br></pre></td></tr></table></figure>
+
+<p>最后是输出语法树的注意事项：</p>
+<ul>
+<li><p><code>readonly</code>时要关闭Helper的输出，<code>back2fetch</code>的时候再打开；</p>
+</li>
+<li><p>主要输出逻辑在<code>createNode</code>中，所以改写文法导致输出<code>AddExp</code>时可能会少输出<code>&lt;AddExp&gt;</code>，需要在parse时加补丁：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Node <span class="title function_">parseAddExp</span><span class="params">()</span> &#123;</span><br><span class="line">    ArrayList&lt;Node&gt; children = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">    <span class="type">int</span> <span class="variable">startNum</span> <span class="operator">=</span> entryTable.getCurLine();</span><br><span class="line"></span><br><span class="line">    children.add(parseMulExp());</span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (entryTable.check(<span class="string">&quot;+&quot;</span>) || entryTable.check(<span class="string">&quot;-&quot;</span>)) &#123;</span><br><span class="line">            <span class="comment">// todo 打补丁</span></span><br><span class="line">            Helper.printParser(<span class="string">&quot;&lt;AddExp&gt;\n&quot;</span>);</span><br><span class="line">            children.add(parseTerminal());</span><br><span class="line">            children.add(parseMulExp());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> <span class="variable">endNum</span> <span class="operator">=</span> entryTable.getCurLine(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">return</span> NodeFactory.createNode(startNum, endNum, NodeType.AddExp, children);</span><br><span class="line">&#125; <span class="comment">// Parser.java</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h3><p>在错误处理阶段，根据每条文法中可能出现的错误挨个编写程序，将错误分为语法错误和语义错误分别处理：</p>
+<ul>
+<li>语法错误：在<code>Parser</code>解析时完成；</li>
+<li>语义错误：调用每个节点的<code>handleError()</code>方法，自顶向下遍历语法树完成，在这个过程中需要建立符号表</li>
+</ul>
+<p>由于分别处理两种错误，不是按照行号先后顺序，则发现错误之后调用<code>Helper</code>的<code>storeError()</code>方法，错误都处理完之后再排序输出。</p>
+<h4 id="语法错误"><a href="#语法错误" class="headerlink" title="语法错误"></a>语法错误</h4><p>这一部分相对容易，只需要在解析的时候加入判断逻辑即可，以<code>BreakStmt</code>为例:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Node <span class="title function_">parseBreakStmt</span><span class="params">()</span> &#123;</span><br><span class="line">    ArrayList&lt;Node&gt; children = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">    <span class="type">int</span> <span class="variable">startNum</span> <span class="operator">=</span> entryTable.getCurLine();</span><br><span class="line"></span><br><span class="line">    children.add(parseTerminal());</span><br><span class="line">    <span class="keyword">if</span> (entryTable.check(<span class="string">&quot;;&quot;</span>)) &#123; <span class="comment">// error i ;</span></span><br><span class="line">        children.add(parseTerminal());</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        Helper.storeError(entryTable.getCurLine(<span class="number">1</span>), ErrorType.i);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> <span class="variable">endNum</span> <span class="operator">=</span> entryTable.getCurLine(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">return</span> NodeFactory.createNode(startNum, endNum, NodeType.BreakStmt, children);</span><br><span class="line">&#125; <span class="comment">// Parser.java</span></span><br></pre></td></tr></table></figure>
+
+<p>但还需要改写一部分<code>EntryTable</code>的判断逻辑，例如：</p>
+<p>对于<code>UnaryExp → PrimaryExp | Ident &#39;(&#39; [FuncRParams] &#39;)&#39; | UnaryOp UnaryExp</code>，对<code>Ident &#39;(&#39; [FuncRParams] &#39;)&#39;</code>是否有参数的判断是检查下一个entry是否是<code>)</code>，而此时会出现缺少<code>)</code>的错误，则修改判断为下一个是否是<code>Exp</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (entryTable.check(NodeType.Exp)) &#123; <span class="comment">// 修改，原来是!&quot;)&quot;</span></span><br><span class="line">    children.add(parseFuncRParams());</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (entryTable.check(<span class="string">&quot;)&quot;</span>)) &#123; <span class="comment">// error j )</span></span><br><span class="line">    children.add(parseTerminal());</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    Helper.storeError(entryTable.getCurLine(<span class="number">1</span>), ErrorType.j);</span><br><span class="line">&#125; <span class="comment">// Parser.java</span></span><br></pre></td></tr></table></figure>
+
+<p>另外对于非法符号：0-31,34-39,127，且单独出现92\： 遍历<code>Lexer</code>中的formatstring检查即可</p>
+<h4 id="语义错误"><a href="#语义错误" class="headerlink" title="语义错误"></a>语义错误</h4><p>需要注意：在语义错误的处理过程中可能会受到语法错误的影响，此时的语法树并不是符合文法定义的。</p>
+<h5 id="建立符号表"><a href="#建立符号表" class="headerlink" title="建立符号表"></a>建立符号表</h5><p>在此部分需要建立符号表，符号表相关类如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Symbol</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> String token;</span><br><span class="line">    <span class="keyword">private</span> SymbolType symbolType; <span class="comment">// 常量，变量还是函数</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> table;</span><br><span class="line">    <span class="keyword">private</span> String reg; <span class="comment">// 寄存器的名字</span></span><br><span class="line">    <span class="keyword">private</span> Value value;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>子类有<code>ArraySymbol, FuncSymbol, SimpleSymbol</code>，部分属性如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SimpleSymbol</span> <span class="keyword">extends</span> <span class="title class_">Symbol</span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> initialVal;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ArraySymbol</span> <span class="keyword">extends</span> <span class="title class_">Symbol</span> &#123; <span class="comment">// 数组变量\常量，包括函数形参</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> d1; <span class="comment">//一维</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> d2;</span><br><span class="line">    <span class="keyword">private</span> ArrayList&lt;Integer&gt; initialVal; </span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">FuncSymbol</span> <span class="keyword">extends</span> <span class="title class_">Symbol</span>&#123;</span><br><span class="line">    <span class="keyword">private</span> ReturnType returnType;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> paraNum;</span><br><span class="line">    <span class="keyword">private</span> ArrayList&lt;FuncParamType&gt; paras;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用<code>SymbolManager</code>类统一管理符号表，部分属性如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SymbolManager</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">SymbolManager</span> <span class="variable">MANAGER</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SymbolManager</span>(); <span class="comment">// 单例模式</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> curId; <span class="comment">// 当前所在的符号表id</span></span><br><span class="line">    <span class="keyword">private</span> Stack&lt;SymbolTable&gt; tableStack; <span class="comment">// 当前所在的 table链(执行</span></span><br><span class="line">    <span class="keyword">private</span> HashMap&lt;String, SymbolTable&gt; tables; <span class="comment">// 所有解析的table, 对于函数，可以用id，也可以用函数名</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> loop; <span class="comment">// 记录循环的层数</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">boolean</span> isGlobal;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> maxId;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>符号表维护逻辑如下：</p>
+<ul>
+<li><p>进入大括号后，新建符号表；遇到declare，在当前符号表新建符号项；</p>
+</li>
+<li><p>离开大括号后符号表弹栈，切换当前符号表到调用它的符号表；</p>
+</li>
+<li><p>函数和block的符号表维护稍有差异，函数需要在定义时建表，将形参也放入符号表中，进入最外层block时不需要建表（使用placeholder区别）</p>
+</li>
+</ul>
+<h5 id="遍历语法树"><a href="#遍历语法树" class="headerlink" title="遍历语法树"></a>遍历语法树</h5><p>每种语义错误的处理逻辑如下：</p>
+<ul>
+<li><p>名字重定义：遇到def的时候查最顶层符号表</p>
+</li>
+<li><p>未定义的ident：ident使用的时候查整个栈的符号表（lval和函数调用出现）</p>
+</li>
+<li><p>参数个数不匹配：给<code>FuncSymbol</code>保存一个<code> ArrayList&lt;FuncParamType&gt;</code>，调用函数的时候查符号表</p>
+</li>
+<li><p>参数类型不匹配：同上</p>
+</li>
+<li><p>return语句：<code>SymbolManager</code>维护一个当前函数的<code>ReturnType</code>，遇到return语句或者退出函数的时候判断（包括main函数</p>
+</li>
+<li><p>不能改变常量的值：assign,  getint时查表</p>
+</li>
+<li><p>printf不匹配：<code>printfStmt.handleError()</code>时保存%d和exp的个数</p>
+</li>
+<li><p>非循环块中使用break和continue：<code>SymbolManager</code>维护loop，遇到这俩判断是否在循环中</p>
+</li>
+</ul>
+<p><strong>注意</strong></p>
+<ul>
+<li><p>函数参数类型匹配新建<code>FuncParaType</code>类，并根据匹配规则重写equals方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">FuncParamType</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> type; <span class="comment">//0 simple 1 一维  2 二维 3 void 函数</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> dim;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">equals</span><span class="params">(Object other)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (other <span class="keyword">instanceof</span> FuncParamType) &#123;</span><br><span class="line">            <span class="keyword">return</span> type == ((FuncParamType) other).getType()</span><br><span class="line">                    &amp;&amp; dim == ((FuncParamType) other).getDim();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> FuncParamType <span class="title function_">merge</span><span class="params">(FuncParamType other)</span> &#123; <span class="comment">// 这种类型之间做运算</span></span><br><span class="line">        <span class="keyword">if</span> (other == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="built_in">this</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="type">int</span> <span class="variable">type</span> <span class="operator">=</span> max(getType(), other.getType());</span><br><span class="line">        <span class="type">int</span> <span class="variable">dim</span> <span class="operator">=</span> max(getDim(), other.getDim());</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">FuncParamType</span>(type, dim);</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="comment">// FuncParaType.java</span></span><br></pre></td></tr></table></figure>
+
+<p>在<strong>函数定义</strong>时解析出参数列表并存在symbol中，对每个函数参数有一个<code>calcu()</code>方法返回参数类型：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> FuncParamType <span class="title function_">calcu</span><span class="params">(<span class="type">int</span> placeHolder)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (children.size() == <span class="number">2</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">FuncParamType</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (Node node: children) &#123;</span><br><span class="line">        <span class="keyword">if</span> (node <span class="keyword">instanceof</span> ConstExpNode) &#123; <span class="comment">// 二维数组形参</span></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">FuncParamType</span>(<span class="number">2</span>, node.calcu());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">FuncParamType</span>(<span class="number">1</span>); <span class="comment">//一维数组</span></span><br><span class="line">&#125; <span class="comment">// FuncParamNode.java</span></span><br></pre></td></tr></table></figure>
+
+<p>并给Node添加eval方法，在<strong>函数调用</strong>时自顶向下返回该node的类型：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> FuncParamType <span class="title function_">eval</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> children.get(<span class="number">0</span>).eval();</span><br><span class="line">&#125; <span class="comment">// e.g. ExpNode.java</span></span><br></pre></td></tr></table></figure>
+
+<p>每种exp重写该方法，返回所有子节点<code>merge</code>之后的type，再与符号表中的定义时保存的参数类型作比较判断即可</p>
+</li>
+<li><p>return语句不匹配分成两种情况：</p>
+<ul>
+<li><p>return语句和声明的函数类型不匹配：遇到return语句时调用<code>SymbolManager</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (isReturnVal &amp;&amp; symbolManager.checkReturnType(ReturnType.VOID)) &#123; </span><br><span class="line">    Helper.storeError(children.get(<span class="number">0</span>).getStartNum(), ErrorType.f);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125; <span class="comment">// ReturnStmtNode.java</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>缺少return语句：由于已经在函数定义时将当前函数的返回类型保存在<code>SymbolManager</code>中，则对函数体的block<code>handleError</code>时判断即可：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">handleError</span><span class="params">(<span class="type">int</span> placeHolder)</span> &#123; <span class="comment">// 给函数体用的</span></span><br><span class="line">    <span class="keyword">for</span> (Node node: children) &#123;</span><br><span class="line">        node.handleError();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (children.size() == <span class="number">2</span>) &#123; <span class="comment">// 空函数，只有&#123;&#125;</span></span><br><span class="line">        <span class="keyword">if</span> (SymbolManager.getManager().checkReturnType(ReturnType.INT)) &#123;</span><br><span class="line">            Helper.storeError(<span class="built_in">this</span>.getEndNum(), ErrorType.g);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">int</span> <span class="variable">num</span> <span class="operator">=</span> children.size() - <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">if</span> (SymbolManager.getManager().checkReturnType(ReturnType.INT)</span><br><span class="line">            &amp;&amp; !(children.get(num).getChildren().get(<span class="number">0</span>) <span class="keyword">instanceof</span> ReturnStmtNode</span><br><span class="line">            &amp;&amp; ((ReturnStmtNode) children.get(num).getChildren().get(<span class="number">0</span>)).isReturnVal())) &#123; <span class="comment">// 当前函数的返回值类型在manager内，此时可以check是否符合return</span></span><br><span class="line">        Helper.storeError(<span class="built_in">this</span>.getEndNum(), ErrorType.g);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+<h3 id="代码生成"><a href="#代码生成" class="headerlink" title="代码生成"></a>代码生成</h3><h4 id="llvm架构"><a href="#llvm架构" class="headerlink" title="llvm架构"></a>llvm架构</h4><p>中间代码采用llvm形式，生成llvm ir的过程就是根据建立的语法树重新生成一个ir结构的代码的过程。分析一段llvm程序发现：</p>
+<p><img src="C:\Users\xqy\AppData\Roaming\Typora\typora-user-images\image-20231220142055355.png" alt="image-20231220142055355"></p>
+<ul>
+<li>顶层<code>Module</code>：Global var，Funcdef</li>
+<li>每个<code>Function</code>: paras, basic block</li>
+<li><code>Basic Block</code>: label， instruction</li>
+<li>instruction：operand（常数或者instruction）</li>
+</ul>
+<p>则根据以上的架构，我们可以写出建构llvm的相关类及其属性：<code>Module, Function, Para, Basic Block, GlobalVar, Instr, Constant</code>；由”llvm的一切皆Value的原则“，建立<code>Value</code>顶层类，让所有llvm相关类继承它。</p>
+<p>对于每条llvm指令的每个操作数，都有其label和类型，则<code>Value</code>应该具备的属性如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Value</span> &#123;</span><br><span class="line">    <span class="keyword">protected</span> String name; </span><br><span class="line">    <span class="keyword">private</span> Type type; </span><br><span class="line">&#125; <span class="comment">// Value.java</span></span><br></pre></td></tr></table></figure>
+
+<p>其中<code>Type</code>为llvm的类型系统，建立<code>Type</code>基类，子类包括<code>SimpleType, ArrayType, PointerType, FixedType</code>（最后一项包含Function，Module，BB这些固定类型）。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SimpleType</span> <span class="keyword">extends</span> <span class="title class_">Type</span> &#123; <span class="comment">// 简单变量 int</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">SimpleType</span> <span class="variable">INT32</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SimpleType</span>(<span class="number">32</span>);</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">SimpleType</span> <span class="variable">INT1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SimpleType</span>(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">SimpleType</span> <span class="variable">VOID</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SimpleType</span>(<span class="number">0</span>);</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> type; <span class="comment">// int1 int32 或者 void</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ArrayType</span> <span class="keyword">extends</span> <span class="title class_">Type</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> Type elementType;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> length;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PointerType</span> <span class="keyword">extends</span> <span class="title class_">Type</span> &#123; <span class="comment">// 函数数组传参</span></span><br><span class="line">    <span class="keyword">private</span> Type target;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">FixedType</span> <span class="keyword">extends</span> <span class="title class_">Type</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">FixedType</span> <span class="variable">FUNCTION</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FixedType</span>();</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">FixedType</span> <span class="variable">MODULE</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FixedType</span>();</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">FixedType</span> <span class="variable">BB</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FixedType</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而对于不同的llvm指令，则对应建构类继承<code>Instr</code>，</p>
+<h4 id="实现细节"><a href="#实现细节" class="headerlink" title="实现细节"></a>实现细节</h4><p>遍历语法树，对Node节点添加<code>generate()</code>方法，子类重写该方法，递归下降生成llvm代码。设置返回值为<code>Value</code>类型，是因为对于所有的instruction指令操作数都是<code>Value</code>，一条add指令的操作数可能是上一条load指令出来的value，示例如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> Value <span class="title function_">generate</span><span class="params">()</span> &#123; <span class="comment">// 直接返回计算出最终结果的指令</span></span><br><span class="line">    <span class="type">Value</span> <span class="variable">op1</span> <span class="operator">=</span> children.get(<span class="number">0</span>).generate();</span><br><span class="line">    Value op2;</span><br><span class="line">    <span class="type">Value</span> <span class="variable">ret</span> <span class="operator">=</span> op1;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">1</span>; i &lt; children.size(); i += <span class="number">2</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (children.get(i) <span class="keyword">instanceof</span> TerminalNode &amp;&amp; ((TerminalNode) children.get(i)).getCategory() == Category.PLUS) &#123;</span><br><span class="line">            op2 = children.get(i + <span class="number">1</span>).generate();</span><br><span class="line">            <span class="type">String</span> <span class="variable">regName</span> <span class="operator">=</span> InstrManager.getInstance().newReg();</span><br><span class="line">            ret = <span class="keyword">new</span> <span class="title class_">AluInstr</span>(InstrType.ALU, AluOp.ADD, regName, op1, op2);</span><br><span class="line">            op1 = ret;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            op2 = children.get(i + <span class="number">1</span>).generate();</span><br><span class="line">            <span class="type">String</span> <span class="variable">regName</span> <span class="operator">=</span> InstrManager.getInstance().newReg();</span><br><span class="line">            ret = <span class="keyword">new</span> <span class="title class_">AluInstr</span>(InstrType.ALU, AluOp.SUB, regName, op1, op2);</span><br><span class="line">            op1 = ret;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125; <span class="comment">// AddExpNode.java</span></span><br></pre></td></tr></table></figure>
+
+<p>另外，在Instr的构造函数中调用insertInstr，能够自动将new出来的指令添加到当前bb中。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">Instr</span><span class="params">(InstrType instrType, Type type, String name)</span> &#123;</span><br><span class="line">    <span class="built_in">super</span>(name, type);</span><br><span class="line">    <span class="built_in">this</span>.instrType = instrType;</span><br><span class="line">    InstrManager.getInstance().insertInstr(<span class="built_in">this</span>); <span class="comment">// 在这里实现了把new的指令都放进去</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="符号表管理"><a href="#符号表管理" class="headerlink" title="符号表管理"></a>符号表管理</h5><p>此时也需要建立符号表，和错误处理的符号表建表逻辑相同；使用<code>InstrManager</code>类来管理中间代码生成，对于<code>Value</code>的命名如下：</p>
+<ul>
+<li><p>源代码显式变量：在建立符号表时将名字存入symbol，生成格式为<code>%var&lt;tableId&gt;_cnt</code>；</p>
+</li>
+<li><p>函数：同上，生成格式为<code>&lt;functionName&gt;</code>；</p>
+</li>
+<li><p>基本块：生成格式为<code>&lt;前缀&gt;cnt</code>，前缀可能为<code>then, else, loop_begin</code>等；</p>
+</li>
+<li><p>中间变量：调用<code>InstrManager</code>中的<code>newReg()</code>方法，生成格式为<code>%tmp&lt;tableId&gt;_cnt</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> String <span class="title function_">newReg</span><span class="params">()</span> &#123; <span class="comment">// 返回当前table作用域下的新的寄存器编号</span></span><br><span class="line">    <span class="type">SymbolTable</span> <span class="variable">table</span> <span class="operator">=</span> SymbolManager.getManager().getCurTable();</span><br><span class="line">    <span class="type">int</span> <span class="variable">size</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (regSize.get(String.valueOf(table.getId())) == <span class="literal">null</span>) &#123;</span><br><span class="line">        size = <span class="number">1</span>;</span><br><span class="line">        regSize.put(String.valueOf(table.getId()), <span class="number">1</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        size = regSize.get(String.valueOf(table.getId())) + <span class="number">1</span>;</span><br><span class="line">        regSize.put(String.valueOf(table.getId()), regSize.get(String.valueOf(table.getId())) + <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;%tmp&quot;</span> + table.getId() + <span class="string">&quot;_&quot;</span> + size;</span><br><span class="line">&#125; </span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">newBB</span><span class="params">(String tip)</span> &#123;</span><br><span class="line">    <span class="type">SymbolTable</span> <span class="variable">table</span> <span class="operator">=</span> SymbolManager.getManager().getCurTable();</span><br><span class="line">    bbId++;</span><br><span class="line">    <span class="keyword">return</span> tip + bbId;</span><br><span class="line">&#125; <span class="comment">// InstrManager.java</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>注意仍然需要栈式符号表边解析边生成，若沿用已生成的符号表，错误在于：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> b = <span class="number">1</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">int</span> a = b, b;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于以上代码，在解析<code>a = b</code>时应该使用顶层符号表的b，但由于查找当前作用域变量优先，则使用到后一个定义的b，出错。</p>
+<p><strong>注意：</strong></p>
+<ul>
+<li>为了方便使用，修改部分节点的<code>createSymbol()</code>，将node对应的symbol保存在属性中；</li>
+<li>对<code>Symbol</code>类新增属性<code>value</code>，保存该symbol对应的llvm值；</li>
+<li>对于每个函数变量，在进入函数之后开辟新空间保存，并修改其value为新的<code>load</code>指令</li>
+</ul>
+<h5 id="const优化"><a href="#const优化" class="headerlink" title="const优化"></a>const优化</h5><p>由于const必定包含初始值，初始化只包含常量ident，且不会涉及到值修改，则可以将初始值保存到符号表中，优化如下：</p>
+<ul>
+<li><p>对于每个constInitval可以使用<code>Constant</code>优化，直接递归计算出初值然后保存到符号表中:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (Node node : children) &#123;</span><br><span class="line">    <span class="keyword">if</span> (node <span class="keyword">instanceof</span> ConstExpNode) &#123;</span><br><span class="line">        dims.add(node.calcu());</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (node <span class="keyword">instanceof</span> ConstInitValNode) &#123;</span><br><span class="line">        <span class="built_in">this</span>.assign = <span class="literal">true</span>;</span><br><span class="line">        <span class="keyword">if</span> (dims.isEmpty()) &#123; <span class="comment">// 非数组变量，初值只有一个const exp表达式</span></span><br><span class="line">            vals.add(node.calcu());</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (dims.size() == <span class="number">1</span>) &#123; <span class="comment">//一维数组</span></span><br><span class="line">            vals = ((ConstInitValNode) node).calcu(vals, dims.get(<span class="number">0</span>));</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            vals = ((ConstInitValNode) node).calcu(vals, dims.get(<span class="number">0</span>), dims.get(<span class="number">1</span>));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="comment">// ConstDefNode.java</span></span><br></pre></td></tr></table></figure>
+
+<p>使用Node类的<code>calcu()</code>函数实现，对exp重写该方法，以<code>AddExpNode</code>为例</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">calcu</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">val</span> <span class="operator">=</span> children.get(<span class="number">0</span>).calcu(); <span class="comment">//先把第一个mul的值取出来，再一对一对的取op和mul</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">1</span>; i &lt; children.size(); i += <span class="number">2</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (((TerminalNode) children.get(i)).getCategory() == Category.PLUS) &#123;</span><br><span class="line">            val += children.get(i + <span class="number">1</span>).calcu();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            val -= children.get(i + <span class="number">1</span>).calcu();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> val;</span><br><span class="line">&#125; <span class="comment">// AddExpNode.java</span></span><br></pre></td></tr></table></figure>
+
+<p>而lval的<code>calcu()</code>直接查表：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">calcu</span><span class="params">()</span> &#123; <span class="comment">// 查符号表</span></span><br><span class="line">    <span class="type">String</span> <span class="variable">token</span> <span class="operator">=</span> ((TerminalNode) children.get(<span class="number">0</span>)).getValue();</span><br><span class="line">    <span class="type">Symbol</span> <span class="variable">symbol</span> <span class="operator">=</span> SymbolManager.getManager().getSymbol(token);</span><br><span class="line">    <span class="type">int</span> x, y;</span><br><span class="line">    <span class="keyword">switch</span> (children.size()) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">1</span>: <span class="comment">//普通变量</span></span><br><span class="line">            <span class="keyword">return</span> ((SimpleSymbol) symbol).getInitialVal();</span><br><span class="line">        <span class="keyword">case</span> <span class="number">3</span>, <span class="number">4</span>: <span class="comment">//一维数组 a[2], a[2</span></span><br><span class="line">            y = children.get(<span class="number">2</span>).calcu();</span><br><span class="line">            <span class="keyword">return</span> ((ArraySymbol) symbol).getVal(<span class="number">0</span>, y);</span><br><span class="line">        <span class="keyword">case</span> <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>: <span class="comment">//二维数组 a[2[3, a[2][3</span></span><br><span class="line">            x = children.get(<span class="number">2</span>).calcu();</span><br><span class="line">            y = children.get(<span class="number">5</span>).calcu();</span><br><span class="line">            <span class="keyword">return</span> ((ArraySymbol) symbol).getVal(x, y);</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">// error</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="comment">// LValNode.java</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>对const进行evaluate时直接从符号表中查找值，以<code>Constant</code>返回即可：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (symbol <span class="keyword">instanceof</span> SimpleSymbol simpleSymbol) &#123;</span><br><span class="line">    <span class="keyword">if</span> (simpleSymbol.isConst()) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Constant</span>(simpleSymbol.getInitialVal());</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">regName</span> <span class="operator">=</span> InstrManager.getInstance().newReg();</span><br><span class="line">        <span class="type">String</span> <span class="variable">pointer</span> <span class="operator">=</span> symbol.getReg();</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">LoadInstr</span>(InstrType.LOAD, SimpleType.INT32, regName, pointer);</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="comment">//LValNode.java</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h5 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h5><p>关键指令是<code>getelementptr</code>，gep的type是指向元素的reference type；保存一个baseAddr用来写toString。</p>
+<p>保留了二维数组的形式，在<code>LValNode</code>类中evaluate的逻辑是蛮力if，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> Value <span class="title function_">generate</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">token</span> <span class="operator">=</span> ((TerminalNode) children.get(<span class="number">0</span>)).getValue();</span><br><span class="line">    <span class="type">Symbol</span> <span class="variable">symbol</span> <span class="operator">=</span> SymbolManager.getManager().getSymbol(token); </span><br><span class="line">    <span class="keyword">if</span> (symbol <span class="keyword">instanceof</span> SimpleSymbol simpleSymbol) &#123;</span><br><span class="line">       <span class="comment">// ...</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="type">ArraySymbol</span> <span class="variable">arraySymbol</span> <span class="operator">=</span> (ArraySymbol) symbol;</span><br><span class="line">        ArrayList&lt;Value&gt; offsets = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (symbol.getValue() <span class="keyword">instanceof</span> GlobalVar) &#123; <span class="comment">// 全局变量</span></span><br><span class="line">            <span class="keyword">if</span> (children.size() == <span class="number">1</span>) &#123; </span><br><span class="line">                <span class="comment">// 这种只可能出现在函数调用中</span></span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (children.size() == <span class="number">4</span>) &#123;</span><br><span class="line">                <span class="keyword">if</span> (arraySymbol.isTwoDim()) &#123;</span><br><span class="line">                    <span class="comment">// 二维数组取一维</span></span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="comment">// 一维数组取值</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            	<span class="comment">// 二维数组取值    </span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123; <span class="comment">// 局部变量或者是函数参数 他们的value都是alloca-&gt;PointerType</span></span><br><span class="line">            <span class="type">Type</span> <span class="variable">targetType</span> <span class="operator">=</span> ((PointerType) symbol.getValue().getType()).getTarget();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (targetType <span class="keyword">instanceof</span> ArrayType) &#123; <span class="comment">//局部变量</span></span><br><span class="line">                <span class="keyword">if</span> (children.size() == <span class="number">1</span>) &#123; </span><br><span class="line">                    <span class="comment">// 取数组本身</span></span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (children.size() == <span class="number">4</span>) &#123;</span><br><span class="line">                    <span class="comment">// ...</span></span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="comment">// ...</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123; <span class="comment">// 函数参数</span></span><br><span class="line">                <span class="type">LoadInstr</span> <span class="variable">loadInstr</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">LoadInstr</span>(InstrType.LOAD, targetType, InstrManager.getInstance().newReg(), symbol.getReg());</span><br><span class="line">                <span class="type">Type</span> <span class="variable">reference</span> <span class="operator">=</span> ((PointerType) targetType).getTarget();</span><br><span class="line">                <span class="keyword">if</span> (children.size() == <span class="number">1</span>) &#123; </span><br><span class="line">                    <span class="comment">// 如果传进来的是a[]i32* 或者b[][2] [2 x i32]*， 使用a或者b</span></span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (children.size() == <span class="number">4</span>) &#123;</span><br><span class="line">                    <span class="comment">// ...</span></span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="comment">// ...</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>global var：llvmType就是数组type<ul>
+<li>直接从0开始偏移</li>
+</ul>
+</li>
+<li>局部变量：value是alloca，type是数组的pointer type<ul>
+<li>先load，然后和global var一样</li>
+</ul>
+</li>
+<li>函数参数：<ul>
+<li>一维数组：i32<em>，value对应的是i32</em>*<ul>
+<li>先load成i32*, 再偏移</li>
+</ul>
+</li>
+<li>二维数组：一维数组指针，value对应的是[2 x i32]**<ul>
+<li>先load成[2 x i32]*，再偏移</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>注意</strong></p>
+<ul>
+<li>非const的全局数组无初值要置零</li>
+</ul>
+<h5 id="短路求值"><a href="#短路求值" class="headerlink" title="短路求值"></a>短路求值</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">genBranch</span><span class="params">(BasicBlock trueBB, BasicBlock falseBB)</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为了实现短路求值，则需要在解析<code>LAndExp</code>时将需要跳转的bb编号传下去，随时准备生成branch和jump指令。短路求值的逻辑如下图：</p>
+<p><img src="/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/%E7%9F%AD%E8%B7%AF%E6%B1%82%E5%80%BC.png" alt="短路求值"></p>
+<ul>
+<li>LOrExp<ul>
+<li>解析中间的<code>LAndExp</code>时，递归调用<code>LAndExp</code>的<code>genBranch</code>：传入trueBB；若为false应该进入下一个<code>LAndExp</code>，新建BB，将新建的BB作为falseBB传入</li>
+<li>解析最后一个：调用<code>genBranch</code>：false，true分别跳转即可</li>
+</ul>
+</li>
+<li>LAndExp<ul>
+<li>解析中间的EqExp：生成branch指令，若为true继续进入下一个BB（新建BB）；若为false直接跳转falseBB</li>
+<li>解析最后一个：生成branch指令，分别跳转</li>
+</ul>
+</li>
+<li>EqExp，RelExp<ul>
+<li>递归生成Icmp指令，注意类型提升（若有操作数为i1，则先提升为i32再比较）</li>
+</ul>
+</li>
+</ul>
+<h5 id="循环跳转"><a href="#循环跳转" class="headerlink" title="循环跳转"></a>循环跳转</h5><p>这个实现较为容易，将当前循环的自增BB和followBB保存在<code>InstrManager</code>中即可。注意使用栈保存，因为可能存在循环嵌套，退出循环时分别pop即可。</p>
+<h3 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h3><h4 id="实验文法"><a href="#实验文法" class="headerlink" title="实验文法"></a>实验文法</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">编译单元    CompUnit → &#123;Decl&#125; &#123;FuncDef&#125; MainFuncDef  </span><br><span class="line">声明  Decl → ConstDecl | VarDecl</span><br><span class="line">常量声明    ConstDecl → &#x27;const&#x27; BType ConstDef &#123; &#x27;,&#x27; ConstDef &#125; &#x27;;&#x27; // i</span><br><span class="line">基本类型    BType → &#x27;int&#x27;</span><br><span class="line">常数定义    ConstDef → Ident &#123; &#x27;[&#x27; ConstExp &#x27;]&#x27; &#125; &#x27;=&#x27; ConstInitVal  // b k</span><br><span class="line">常量初值    ConstInitVal → ConstExp</span><br><span class="line">    | &#x27;&#123;&#x27; [ ConstInitVal &#123; &#x27;,&#x27; ConstInitVal &#125; ] &#x27;&#125;&#x27; </span><br><span class="line">变量声明    VarDecl → BType VarDef &#123; &#x27;,&#x27; VarDef &#125; &#x27;;&#x27; // i</span><br><span class="line">变量定义    VarDef → Ident &#123; &#x27;[&#x27; ConstExp &#x27;]&#x27; &#125; // b</span><br><span class="line">    | Ident &#123; &#x27;[&#x27; ConstExp &#x27;]&#x27; &#125; &#x27;=&#x27; InitVal // k</span><br><span class="line">变量初值    InitVal → Exp | &#x27;&#123;&#x27; [ InitVal &#123; &#x27;,&#x27; InitVal &#125; ] &#x27;&#125;&#x27;</span><br><span class="line">函数定义    FuncDef → FuncType Ident &#x27;(&#x27; [FuncFParams] &#x27;)&#x27; Block // b g j</span><br><span class="line">主函数定义   MainFuncDef → &#x27;int&#x27; &#x27;main&#x27; &#x27;(&#x27; &#x27;)&#x27; Block // g j</span><br><span class="line">函数类型    FuncType → &#x27;void&#x27; | &#x27;int&#x27; </span><br><span class="line">函数形参表   FuncFParams → FuncFParam &#123; &#x27;,&#x27; FuncFParam &#125; </span><br><span class="line">函数形参    FuncFParam → BType Ident [&#x27;[&#x27; &#x27;]&#x27; &#123; &#x27;[&#x27; ConstExp &#x27;]&#x27; &#125;]  //   b k</span><br><span class="line">语句块     Block → &#x27;&#123;&#x27; &#123; BlockItem &#125; &#x27;&#125;&#x27; </span><br><span class="line">语句块项    BlockItem → Decl | Stmt </span><br><span class="line">语句  Stmt → LVal &#x27;=&#x27; Exp &#x27;;&#x27; | [Exp] &#x27;;&#x27; | Block // h i</span><br><span class="line">    | &#x27;if&#x27; &#x27;(&#x27; Cond &#x27;)&#x27; Stmt [ &#x27;else&#x27; Stmt ] // j</span><br><span class="line">    | &#x27;for&#x27; &#x27;(&#x27;[ForStmt] &#x27;;&#x27; [Cond] &#x27;;&#x27; [ForStmt] &#x27;)&#x27; Stmt</span><br><span class="line">    | &#x27;break&#x27; &#x27;;&#x27; | &#x27;continue&#x27; &#x27;;&#x27; // i m</span><br><span class="line">    | &#x27;return&#x27; [Exp] &#x27;;&#x27; // f i</span><br><span class="line">    | LVal &#x27;=&#x27; &#x27;getint&#x27;&#x27;(&#x27;&#x27;)&#x27;&#x27;;&#x27; // h i j</span><br><span class="line">    | &#x27;printf&#x27;&#x27;(&#x27;FormatString&#123;,Exp&#125;&#x27;)&#x27;&#x27;;&#x27; // i j l</span><br><span class="line">语句 ForStmt → LVal &#x27;=&#x27; Exp   //h</span><br><span class="line">表达式 Exp → AddExp 注：SysY 表达式是int 型表达式 </span><br><span class="line">条件表达式   Cond → LOrExp </span><br><span class="line">左值表达式   LVal → Ident &#123;&#x27;[&#x27; Exp &#x27;]&#x27;&#125; // c k</span><br><span class="line">基本表达式   PrimaryExp → &#x27;(&#x27; Exp &#x27;)&#x27; | LVal | Number </span><br><span class="line">数值  Number → IntConst </span><br><span class="line">一元表达式   UnaryExp → PrimaryExp | Ident &#x27;(&#x27; [FuncRParams] &#x27;)&#x27; // c d e j</span><br><span class="line">        | UnaryOp UnaryExp </span><br><span class="line">单目运算符   UnaryOp → &#x27;+&#x27; | &#x27;−&#x27; | &#x27;!&#x27; 注：&#x27;!&#x27;仅出现在条件表达式中 </span><br><span class="line">函数实参表   FuncRParams → Exp &#123; &#x27;,&#x27; Exp &#125; </span><br><span class="line">乘除模表达式  MulExp → UnaryExp | MulExp (&#x27;*&#x27; | &#x27;/&#x27; | &#x27;%&#x27;) UnaryExp </span><br><span class="line">加减表达式   AddExp → MulExp | AddExp (&#x27;+&#x27; | &#x27;−&#x27;) MulExp </span><br><span class="line">关系表达式   RelExp → AddExp | RelExp (&#x27;&lt;&#x27; | &#x27;&gt;&#x27; | &#x27;&lt;=&#x27; | &#x27;&gt;=&#x27;) AddExp</span><br><span class="line">相等性表达式  EqExp → RelExp | EqExp (&#x27;==&#x27; | &#x27;!=&#x27;) RelExp</span><br><span class="line">逻辑与表达式  LAndExp → EqExp | LAndExp &#x27;&amp;&amp;&#x27; EqExp</span><br><span class="line">逻辑或表达式  LOrExp → LAndExp | LOrExp &#x27;||&#x27; LAndExp </span><br><span class="line">常量表达式   ConstExp → AddExp 注：使用的Ident 必须是常量</span><br><span class="line">格式字符串:</span><br><span class="line">&lt;FormatString&gt; → &#x27;&quot;&#x27;&#123;&lt;Char&gt;&#125;&#x27;&quot;&#x27; // a</span><br></pre></td></tr></table></figure>
+
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/archives/">Archives</a></li>
+        
+          <li><a href="/tags/">Tags</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/Search/">Search</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3"><span class="toc-number">1.</span> <span class="toc-text">SysY编译器设计文档</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E4%BD%93%E7%BB%93%E6%9E%84"><span class="toc-number">1.1.</span> <span class="toc-text">总体结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E7%BB%84%E7%BB%87%E5%92%8C%E6%8E%A5%E5%8F%A3"><span class="toc-number">1.2.</span> <span class="toc-text">文件组织和接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90"><span class="toc-number">1.3.</span> <span class="toc-text">词法分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90"><span class="toc-number">1.4.</span> <span class="toc-text">语法分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%94%B9%E5%86%99%E6%96%87%E6%B3%95"><span class="toc-number">1.4.1.</span> <span class="toc-text">改写文法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%80%92%E5%BD%92%E4%B8%8B%E9%99%8D"><span class="toc-number">1.4.2.</span> <span class="toc-text">递归下降</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86"><span class="toc-number">1.5.</span> <span class="toc-text">错误处理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%AD%E6%B3%95%E9%94%99%E8%AF%AF"><span class="toc-number">1.5.1.</span> <span class="toc-text">语法错误</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%AD%E4%B9%89%E9%94%99%E8%AF%AF"><span class="toc-number">1.5.2.</span> <span class="toc-text">语义错误</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%BB%BA%E7%AB%8B%E7%AC%A6%E5%8F%B7%E8%A1%A8"><span class="toc-number">1.5.2.1.</span> <span class="toc-text">建立符号表</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E9%81%8D%E5%8E%86%E8%AF%AD%E6%B3%95%E6%A0%91"><span class="toc-number">1.5.2.2.</span> <span class="toc-text">遍历语法树</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E7%94%9F%E6%88%90"><span class="toc-number">1.6.</span> <span class="toc-text">代码生成</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#llvm%E6%9E%B6%E6%9E%84"><span class="toc-number">1.6.1.</span> <span class="toc-text">llvm架构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82"><span class="toc-number">1.6.2.</span> <span class="toc-text">实现细节</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E7%AC%A6%E5%8F%B7%E8%A1%A8%E7%AE%A1%E7%90%86"><span class="toc-number">1.6.2.1.</span> <span class="toc-text">符号表管理</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#const%E4%BC%98%E5%8C%96"><span class="toc-number">1.6.2.2.</span> <span class="toc-text">const优化</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%95%B0%E7%BB%84"><span class="toc-number">1.6.2.3.</span> <span class="toc-text">数组</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E7%9F%AD%E8%B7%AF%E6%B1%82%E5%80%BC"><span class="toc-number">1.6.2.4.</span> <span class="toc-text">短路求值</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%BE%AA%E7%8E%AF%E8%B7%B3%E8%BD%AC"><span class="toc-number">1.6.2.5.</span> <span class="toc-text">循环跳转</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%99%84%E5%BD%95"><span class="toc-number">1.7.</span> <span class="toc-text">附录</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E6%96%87%E6%B3%95"><span class="toc-number">1.7.1.</span> <span class="toc-text">实验文法</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&text=SysY编译器设计文档"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=SysY编译器设计文档"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&is_video=false&description=SysY编译器设计文档"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=SysY编译器设计文档&body=Check out this article: https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=SysY编译器设计文档"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=SysY编译器设计文档"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=SysY编译器设计文档"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=SysY编译器设计文档"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&name=SysY编译器设计文档&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://akkkkkkkkki.github.io/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&t=SysY编译器设计文档"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2023
+    akkkkkkkkki
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Archives</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tags</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/Search/">Search</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
