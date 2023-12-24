@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="WalkDairy设计文档 walkdairy——看见你的足迹  app简介本项目是一款随手记app，以地图形式可视化用户的日记数据，支持添加、删除和本地保存； 同时也是一个生活小帮手，支持定位or选点检索周边地标（美食、住宿、生活资源）；同时添加天气服务，能够显示当前定位地点的天气状况以及未来五天的气温折线图； 当把7天24h投射在一张地图上的时候，或许会增加对时间的感知。 开发工具123456">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WalkDiary设计文档">
+<meta property="og:url" content="https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/index.html">
+<meta property="og:site_name" content="Aki&#39;s Cottage">
+<meta property="og:description" content="WalkDairy设计文档 walkdairy——看见你的足迹  app简介本项目是一款随手记app，以地图形式可视化用户的日记数据，支持添加、删除和本地保存； 同时也是一个生活小帮手，支持定位or选点检索周边地标（美食、住宿、生活资源）；同时添加天气服务，能够显示当前定位地点的天气状况以及未来五天的气温折线图； 当把7天24h投射在一张地图上的时候，或许会增加对时间的感知。 开发工具123456">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-12-24T14:48:22.000Z">
+<meta property="article:modified_time" content="2023-12-24T14:48:54.846Z">
+<meta property="article:author" content="akkkkkkkkki">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>WalkDiary设计文档</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Archives</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tags</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/Search/">Search</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2023/12/20/SysY%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&text=WalkDiary设计文档"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=WalkDiary设计文档"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&is_video=false&description=WalkDiary设计文档"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=WalkDiary设计文档&body=Check out this article: https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=WalkDiary设计文档"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=WalkDiary设计文档"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=WalkDiary设计文档"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=WalkDiary设计文档"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&name=WalkDiary设计文档&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&t=WalkDiary设计文档"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#WalkDairy%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3"><span class="toc-number">1.</span> <span class="toc-text">WalkDairy设计文档</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#app%E7%AE%80%E4%BB%8B"><span class="toc-number">1.1.</span> <span class="toc-text">app简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7"><span class="toc-number">1.2.</span> <span class="toc-text">开发工具</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8A%9F%E8%83%BD%E4%BB%8B%E7%BB%8D"><span class="toc-number">1.3.</span> <span class="toc-text">功能介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9C%B0%E5%9B%BE%E6%98%BE%E7%A4%BA"><span class="toc-number">1.3.1.</span> <span class="toc-text">地图显示</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%97%A5%E8%AE%B0%E7%9B%B8%E5%85%B3"><span class="toc-number">1.3.2.</span> <span class="toc-text">日记相关</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%9A%E4%BD%8D%E7%9B%B8%E5%85%B3"><span class="toc-number">1.3.3.</span> <span class="toc-text">定位相关</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%91%A8%E8%BE%B9%E6%A3%80%E7%B4%A2"><span class="toc-number">1.3.4.</span> <span class="toc-text">周边检索</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A4%A9%E6%B0%94%E6%9C%8D%E5%8A%A1"><span class="toc-number">1.3.5.</span> <span class="toc-text">天气服务</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E7%AE%97%E6%B3%95"><span class="toc-number">1.4.</span> <span class="toc-text">关键算法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E7%A1%80%E5%9C%B0%E5%9B%BE%E6%9C%8D%E5%8A%A1-x2F-%E5%AE%9A%E4%BD%8D"><span class="toc-number">1.4.1.</span> <span class="toc-text">基础地图服务&#x2F;定位</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%B7%BB%E5%8A%A0-x2F-%E5%88%A0%E9%99%A4%E8%AE%B0%E5%BD%95"><span class="toc-number">1.4.2.</span> <span class="toc-text">添加&#x2F;删除记录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#annotation%E4%B8%AA%E6%80%A7%E5%8C%96"><span class="toc-number">1.4.3.</span> <span class="toc-text">annotation个性化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#poi%E4%BF%A1%E6%81%AF%E6%A3%80%E7%B4%A2-x2F-%E5%A4%A9%E6%B0%94%E4%BF%A1%E6%81%AF%E6%A3%80%E7%B4%A2"><span class="toc-number">1.4.4.</span> <span class="toc-text">poi信息检索&#x2F;天气信息检索</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#poi"><span class="toc-number">1.4.4.1.</span> <span class="toc-text">poi</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#weather"><span class="toc-number">1.4.4.2.</span> <span class="toc-text">weather</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A1%B9%E7%9B%AE%E4%BA%AE%E7%82%B9"><span class="toc-number">1.5.</span> <span class="toc-text">项目亮点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BB%E8%A6%81%E6%88%AA%E5%9B%BE"><span class="toc-number">1.6.</span> <span class="toc-text">主要截图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A1%B9%E7%9B%AE%E5%B1%95%E6%9C%9B"><span class="toc-number">1.7.</span> <span class="toc-text">项目展望</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%99%84%E5%BD%95"><span class="toc-number">1.8.</span> <span class="toc-text">附录</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        WalkDiary设计文档
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">akkkkkkkkki</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2023-12-24T14:48:22.000Z" class="dt-published" itemprop="datePublished">2023-12-24</time>
+        
+      
+    </div>
+
+
+      
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h2 id="WalkDairy设计文档"><a href="#WalkDairy设计文档" class="headerlink" title="WalkDairy设计文档"></a>WalkDairy设计文档</h2><blockquote>
+<p>walkdairy——看见你的足迹</p>
+</blockquote>
+<h3 id="app简介"><a href="#app简介" class="headerlink" title="app简介"></a>app简介</h3><p>本项目是一款随手记app，以地图形式可视化用户的日记数据，支持添加、删除和本地保存；</p>
+<p>同时也是一个生活小帮手，支持定位or选点检索周边地标（美食、住宿、生活资源）；同时添加天气服务，能够显示当前定位地点的天气状况以及未来五天的气温折线图；</p>
+<p>当把7天24h投射在一张地图上的时候，或许会增加对时间的感知。</p>
+<h3 id="开发工具"><a href="#开发工具" class="headerlink" title="开发工具"></a>开发工具</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">语言: Swift</span><br><span class="line">框架: Storyboard</span><br><span class="line">IDE: Xcode</span><br><span class="line">关键版本信息：</span><br><span class="line">	Xcode: 14.0.1</span><br><span class="line">	iOS: 16.0</span><br><span class="line">	CocoaPods: 1.13.0</span><br><span class="line">	BaiduMapKit: 6.5.8</span><br><span class="line">	BaiduLocationKit 2.1.0</span><br></pre></td></tr></table></figure>
+
+<p>项目文件树如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">│  AppDelegate.swift				# 代理函数</span><br><span class="line">│  Info.plist						# 权限</span><br><span class="line">│  SceneDelegate.swift</span><br><span class="line">│  ViewController.swift				# 主界面</span><br><span class="line">│</span><br><span class="line">├─Assets.xcassets</span><br><span class="line">│省略一堆图片文件……</span><br><span class="line">├─Base.lproj</span><br><span class="line">│      LaunchScreen.storyboard 		# APP的splash screen</span><br><span class="line">│      Main.storyboard 				# 未使用</span><br><span class="line">│</span><br><span class="line">├─Function							# 未使用</span><br><span class="line">│      LocationManager.swift</span><br><span class="line">│      POISearch.swift</span><br><span class="line">│</span><br><span class="line">├─Modules							# 包含未持久化和持久化所使用的数据模型</span><br><span class="line">│      CoreRecord+CoreDataClass.swift</span><br><span class="line">│      CoreRecord+CoreDataProperties.swift</span><br><span class="line">│      CoreUser+CoreDataClass.swift</span><br><span class="line">│      CoreUser+CoreDataProperties.swift</span><br><span class="line">│      Helper.swift</span><br><span class="line">│      Record.swift</span><br><span class="line">│      Restaurant.swift</span><br><span class="line">│      SearchOptions.swift</span><br><span class="line">│      UserData.swift</span><br><span class="line">│      UserManager.swift</span><br><span class="line">│</span><br><span class="line">├─ViewControllers					# 各个子界面</span><br><span class="line">│  │  BaiduNavViewController.swift	# 未使用</span><br><span class="line">│  │  BMKMyAnnotationView.swift		# 自定义annotation view，便于管理</span><br><span class="line">│  │  CenterViewController.swift	# 个人中心</span><br><span class="line">│  │  LineCharView.swift			# 气温折线图</span><br><span class="line">│  │  LogRegViewController.swift	# 未使用</span><br><span class="line">│  │  Paw.swift						# record点</span><br><span class="line">│  │  POI.swift						# poi点</span><br><span class="line">│  │  POISearchViewController.swift	# 搜索界面</span><br><span class="line">│  │  PopupViewController.swift		# 编辑record界面</span><br><span class="line">│  │  RecordViewController.swift	# 显示record界面</span><br><span class="line">│  │</span><br><span class="line">│  └─LogRegViewController.xcdatamodeld</span><br><span class="line">│      └─LogRegViewController.xcdatamodel</span><br><span class="line">│              contents				# 未使用</span><br><span class="line">│</span><br><span class="line">└─walkdiary.xcdatamodeld			# coredata数据文件</span><br><span class="line">    └─Model.xcdatamodel</span><br><span class="line">            contents</span><br></pre></td></tr></table></figure>
+
+<h3 id="功能介绍"><a href="#功能介绍" class="headerlink" title="功能介绍"></a>功能介绍</h3><h4 id="地图显示"><a href="#地图显示" class="headerlink" title="地图显示"></a>地图显示</h4><ul>
+<li>主地图界面的显示、移动和缩放</li>
+<li>识别长按手势事件</li>
+<li>添加不同外观的地图annotation</li>
+<li>点击annotation触发事件</li>
+</ul>
+<h4 id="日记相关"><a href="#日记相关" class="headerlink" title="日记相关"></a>日记相关</h4><ul>
+<li>对某个地图点编辑添加记录</li>
+<li>点击地图点显示已添加的记录</li>
+<li>删除指定记录</li>
+<li>显示本地所有记录</li>
+<li>显示本地所有记录的条目和字数</li>
+</ul>
+<h4 id="定位相关"><a href="#定位相关" class="headerlink" title="定位相关"></a>定位相关</h4><ul>
+<li>支持定位并移动地图到所在位置</li>
+</ul>
+<h4 id="周边检索"><a href="#周边检索" class="headerlink" title="周边检索"></a>周边检索</h4><ul>
+<li>支持关键字+距离+分类进行周边poi（point of interest）检索</li>
+<li>详细展示检索结果，包括地名、地址、营业时间、均价、评分，并显示当前查看条目所在的地图位置</li>
+</ul>
+<h4 id="天气服务"><a href="#天气服务" class="headerlink" title="天气服务"></a>天气服务</h4><ul>
+<li>显示当前定位所在地温度和天气状况，并根据数据更新时间来显示day&#x2F;moon图标</li>
+<li>显示未来五天气温折线图</li>
+</ul>
+<h3 id="关键算法"><a href="#关键算法" class="headerlink" title="关键算法"></a>关键算法</h3><h4 id="基础地图服务-x2F-定位"><a href="#基础地图服务-x2F-定位" class="headerlink" title="基础地图服务&#x2F;定位"></a>基础地图服务&#x2F;定位</h4><ul>
+<li>在viewcontroller中添加如下代码，即可显示一张全屏地图：</li>
+</ul>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mapView <span class="operator">=</span> <span class="type">BMKMapView</span>(frame: <span class="keyword">self</span>.view.frame)</span><br><span class="line">mapView<span class="operator">?</span>.delegate <span class="operator">=</span> <span class="keyword">self</span></span><br><span class="line"><span class="keyword">self</span>.view.addSubview(mapView<span class="operator">!</span>);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>检测长按事件：</li>
+</ul>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">func</span> <span class="title function_">mapview</span>(<span class="keyword">_</span> <span class="params">mapView</span>: <span class="type">BMKMapView</span>, <span class="params">onLongClick</span> <span class="params">coordinate</span>: <span class="type">CLLocationCoordinate2D</span>) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>检测annotation点击：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">func</span> <span class="title function_">mapView</span>(<span class="keyword">_</span> <span class="params">mapView</span>: <span class="type">BMKMapView</span>, <span class="params">didSelect</span> <span class="params">view</span>: <span class="type">BMKAnnotationView</span>) &#123;</span><br><span class="line">    <span class="keyword">let</span> recordView <span class="operator">=</span> <span class="type">RecordViewController</span>()</span><br><span class="line">    recordView.delegate <span class="operator">=</span> <span class="keyword">self</span></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>定位，发起定位（completion block用法）</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">@objc</span> <span class="keyword">func</span> <span class="title function_">startLocationService</span>() &#123;</span><br><span class="line">    <span class="keyword">self</span>.completionBlock <span class="operator">=</span> &#123; (location: <span class="type">BMKLocation</span>?, state: <span class="type">BMKLocationNetworkState</span>, error: <span class="type">Error</span>?) <span class="keyword">in</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">let</span> error <span class="operator">=</span> error &#123;</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;LocError: &#123;<span class="subst">\(error._code)</span> - <span class="subst">\(error.localizedDescription)</span>&#125;;&quot;</span>)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">let</span> location <span class="operator">=</span> location &#123;</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">let</span> loc <span class="operator">=</span> location.location &#123;</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;Current location: <span class="subst">\(loc.coordinate.latitude)</span>, <span class="subst">\(loc.coordinate.longitude)</span>&quot;</span>)</span><br><span class="line">                <span class="keyword">self</span>.mapView<span class="operator">?</span>.setCenter(loc.coordinate, animated: <span class="literal">true</span>)</span><br><span class="line">                <span class="keyword">self</span>.mapView<span class="operator">?</span>.removeAnnotation(<span class="keyword">self</span>.annotation)</span><br><span class="line">                <span class="keyword">self</span>.annotation.coordinate <span class="operator">=</span> loc.coordinate</span><br><span class="line">                <span class="keyword">self</span>.mapView<span class="operator">?</span>.addAnnotation(<span class="keyword">self</span>.annotation)</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">let</span> rgcData <span class="operator">=</span> location.rgcData &#123;</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;ReGeocode info: <span class="subst">\(rgcData)</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> <span class="keyword">let</span> poiList <span class="operator">=</span> rgcData.poiList &#123;</span><br><span class="line">                    <span class="keyword">for</span> poi <span class="keyword">in</span> poiList &#123;</span><br><span class="line">                        <span class="built_in">print</span>(<span class="string">&quot;Poi: <span class="subst">\(poi.name <span class="operator">??</span> <span class="string">&quot;&quot;</span>)</span>, <span class="subst">\(poi.addr <span class="operator">??</span> <span class="string">&quot;&quot;</span>)</span>, <span class="subst">\(poi.relaiability)</span>, <span class="subst">\(poi.tags <span class="operator">??</span> <span class="string">&quot;&quot;</span>)</span>, <span class="subst">\(poi.uid <span class="operator">??</span> <span class="string">&quot;&quot;</span>)</span>&quot;</span>)</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> <span class="keyword">let</span> poiRegion <span class="operator">=</span> rgcData.poiRegion &#123;</span><br><span class="line">                    <span class="built_in">print</span>(<span class="string">&quot;PoiRegion: <span class="subst">\(poiRegion.name <span class="operator">??</span> <span class="string">&quot;&quot;</span>)</span>, <span class="subst">\(poiRegion.tags <span class="operator">??</span> <span class="string">&quot;&quot;</span>)</span>, <span class="subst">\(poiRegion.directionDesc <span class="operator">??</span> <span class="string">&quot;&quot;</span>)</span>&quot;</span>)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    locationManager.mapManager.requestLocation(withReGeocode: <span class="literal">true</span>, withNetworkState: <span class="literal">true</span>, completionBlock: <span class="keyword">self</span>.completionBlock<span class="operator">!</span>)</span><br><span class="line">    showAddSearchBtn()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="添加-x2F-删除记录"><a href="#添加-x2F-删除记录" class="headerlink" title="添加&#x2F;删除记录"></a>添加&#x2F;删除记录</h4><blockquote>
+<p>主要描述整体delegate流程</p>
+</blockquote>
+<ul>
+<li><p>用户编辑好信息后，在popupVC中将数据打包成<code>CoreRecord</code>类，调用代理方法</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">func</span> <span class="title function_">didDismissWithCoordinate</span>(<span class="params">coordinate</span>: <span class="type">CLLocationCoordinate2D</span>, <span class="params">record</span>: <span class="type">Record</span>, <span class="params">nsrecord</span>: <span class="type">CoreRecord</span>)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>VC中代理实现</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">func</span> <span class="title function_">didDismissWithCoordinate</span>(<span class="params">coordinate</span>: <span class="type">CLLocationCoordinate2D</span>, <span class="params">record</span>: <span class="type">Record</span>, <span class="params">nsrecord</span>: <span class="type">CoreRecord</span>) &#123;</span><br><span class="line">    mapView<span class="operator">?</span>.removeAnnotation(annotation)</span><br><span class="line">    <span class="keyword">let</span> newPaw <span class="operator">=</span> <span class="type">Paw</span>()</span><br><span class="line">    newPaw.coordinate <span class="operator">=</span> coordinate</span><br><span class="line"></span><br><span class="line">    pawId <span class="operator">=</span> record.uuid</span><br><span class="line">    mapView<span class="operator">?</span>.addAnnotation(newPaw)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>recordVC建立时传record数据，点击recordVC的删除按钮时调用代理方法</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">func</span> <span class="title function_">didDeleteRecord</span>(<span class="params">id</span>: <span class="type">String</span>)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>VC中实现代理方法</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">func</span> <span class="title function_">didDeleteRecord</span>(<span class="params">id</span>: <span class="type">String</span>) &#123;</span><br><span class="line">    mapView<span class="operator">?</span>.removeAnnotation(pawViews[id]<span class="operator">!</span>.annotation)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>至此实现了annotation的添加和移除。</p>
+<h4 id="annotation个性化"><a href="#annotation个性化" class="headerlink" title="annotation个性化"></a>annotation个性化</h4><blockquote>
+<p>百度地图的annotation外观支持自定义，但无论怎样都定义所有annotation类的对象外观，于是采用如下策略</p>
+</blockquote>
+<ul>
+<li><p>annotation的外观在回调方法中定义，所以需要重写回调方法</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">func</span> <span class="title function_">mapView</span>(<span class="keyword">_</span> <span class="params">mapView</span>: <span class="type">BMKMapView</span>, <span class="params">viewFor</span> <span class="params">annotation</span>: <span class="type">BMKAnnotation</span>) -&gt; <span class="type">BMKAnnotationView</span>?</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>我的实现方法是，自定义一个paw类继承百度地图的annotation类，并在方法中使用isKind()区分不同的annotation，给不同的image</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">func</span> <span class="title function_">mapView</span>(<span class="keyword">_</span> <span class="params">mapView</span>: <span class="type">BMKMapView</span>, <span class="params">viewFor</span> <span class="params">annotation</span>: <span class="type">BMKAnnotation</span>) -&gt; <span class="type">BMKAnnotationView</span>? &#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     根据指定标识查找一个可被复用的标注，用此方法来代替新创建一个标注，返回可被复用的标注</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">if</span> annotation.isKind(of: <span class="type">Paw</span>.<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">var</span> annotationView: <span class="type">BMKMyAnnotationView</span>? <span class="operator">=</span> mapView.dequeueReusableAnnotationView(withIdentifier: pawId) <span class="keyword">as?</span> <span class="type">BMKMyAnnotationView</span></span><br><span class="line">        <span class="keyword">if</span> annotationView <span class="operator">==</span> <span class="literal">nil</span> &#123;</span><br><span class="line">            annotationView <span class="operator">=</span> <span class="type">BMKMyAnnotationView</span>.<span class="keyword">init</span>(annotation: annotation, reuseIdentifier: pawId)</span><br><span class="line">        &#125;</span><br><span class="line">        annotationView<span class="operator">?</span>.image <span class="operator">=</span> <span class="type">UIImage</span>.<span class="keyword">init</span>(named: <span class="string">&quot;paw&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> annotationView</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> annotation.isKind(of: <span class="type">POI</span>.<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">var</span> annotationView: <span class="type">BMKPinAnnotationView</span>? <span class="operator">=</span> mapView.dequeueReusableAnnotationView(withIdentifier: <span class="string">&quot;annotationViewIdentifier&quot;</span>) <span class="keyword">as?</span> <span class="type">BMKPinAnnotationView</span></span><br><span class="line">        <span class="keyword">if</span> annotationView <span class="operator">==</span> <span class="literal">nil</span> &#123;</span><br><span class="line">            annotationView <span class="operator">=</span> <span class="type">BMKPinAnnotationView</span>.<span class="keyword">init</span>(annotation: annotation, reuseIdentifier: <span class="string">&quot;annotationViewIdentifier&quot;</span>)</span><br><span class="line">        &#125;</span><br><span class="line">        annotationView<span class="operator">?</span>.image <span class="operator">=</span> <span class="type">UIImage</span>.<span class="keyword">init</span>(named: <span class="string">&quot;pin2&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> annotationView</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> annotation.isKind(of: <span class="type">BMKPointAnnotation</span>.<span class="keyword">self</span>) &#123;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">var</span> annotationView: <span class="type">BMKPinAnnotationView</span>? <span class="operator">=</span> mapView.dequeueReusableAnnotationView(withIdentifier: <span class="string">&quot;annotationViewIdentifier&quot;</span>) <span class="keyword">as?</span> <span class="type">BMKPinAnnotationView</span></span><br><span class="line">        <span class="keyword">if</span> annotationView <span class="operator">==</span> <span class="literal">nil</span> &#123;</span><br><span class="line">            annotationView <span class="operator">=</span> <span class="type">BMKPinAnnotationView</span>.<span class="keyword">init</span>(annotation: annotation, reuseIdentifier: <span class="string">&quot;annotationViewIdentifier&quot;</span>)</span><br><span class="line">        &#125;</span><br><span class="line">        annotationView<span class="operator">?</span>.image <span class="operator">=</span> <span class="type">UIImage</span>.<span class="keyword">init</span>(named: <span class="string">&quot;pin&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> annotationView</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="poi信息检索-x2F-天气信息检索"><a href="#poi信息检索-x2F-天气信息检索" class="headerlink" title="poi信息检索&#x2F;天气信息检索"></a>poi信息检索&#x2F;天气信息检索</h4><blockquote>
+<p>实现百度地图接口</p>
+</blockquote>
+<p>主要流程：</p>
+<ul>
+<li>配置搜索参数，发起搜索</li>
+<li>实现回调函数处理搜索结果</li>
+</ul>
+<h5 id="poi"><a href="#poi" class="headerlink" title="poi"></a>poi</h5><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">func</span> <span class="title function_">postSearch</span>() &#123;</span><br><span class="line">    <span class="comment">// 配置参数</span></span><br><span class="line">    nearbyOption.keywords <span class="operator">=</span> []</span><br><span class="line">    nearbyOption.keywords.append(searchBar.text <span class="operator">??</span> <span class="string">&quot;饭店&quot;</span>)</span><br><span class="line">    nearbyOption.location <span class="operator">=</span> center</span><br><span class="line">    nearbyOption.radius <span class="operator">=</span> distance</span><br><span class="line">    nearbyOption.isRadiusLimit <span class="operator">=</span> <span class="literal">false</span></span><br><span class="line">    nearbyOption.scope <span class="operator">=</span> .<span class="type">BMK_POI_SCOPE_DETAIL_INFORMATION</span></span><br><span class="line">    nearbyOption.filter <span class="operator">=</span> filter</span><br><span class="line">    nearbyOption.pageIndex <span class="operator">=</span> <span class="number">0</span></span><br><span class="line">    nearbyOption.pageSize <span class="operator">=</span> <span class="number">10</span></span><br><span class="line">    nearbyOption.extensionsAdcode <span class="operator">=</span> <span class="literal">true</span></span><br><span class="line">    <span class="comment">// 发起搜索</span></span><br><span class="line">    <span class="keyword">let</span> flag <span class="operator">=</span> poiSearch.poiSearchNear(by: nearbyOption)</span><br><span class="line">    <span class="keyword">if</span> flag &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;POI周边检索成功&quot;</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;POI周边检索失败&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 回调函数</span></span><br><span class="line"><span class="keyword">func</span> <span class="title function_">onGetPoiResult</span>(<span class="keyword">_</span> <span class="params">searcher</span>: <span class="type">BMKPoiSearch</span>, <span class="params">result</span> <span class="params">poiResult</span>: <span class="type">BMKPOISearchResult</span>, <span class="params">errorCode</span>: <span class="type">BMKSearchErrorCode</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> errorCode <span class="operator">==</span> <span class="type">BMK_SEARCH_NO_ERROR</span> &#123;</span><br><span class="line">        <span class="comment">//在此处理正常结果</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;检索结果返回成功&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (errorCode <span class="operator">==</span> <span class="type">BMK_SEARCH_AMBIGUOUS_KEYWORD</span>) &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;检索词有歧义&quot;</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">print</span>(errorCode)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (searchResult.count <span class="operator">==</span> <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 弹出未找到消息框</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">self</span>.delegate<span class="operator">?</span>.didPostSearch(searchResults: searchResult, distance: distance)</span><br><span class="line">    dismiss(animated: <span class="literal">true</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="weather"><a href="#weather" class="headerlink" title="weather"></a>weather</h5><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">func</span> <span class="title function_">weatherSearch</span>() &#123;</span><br><span class="line">    <span class="comment">//配置参数</span></span><br><span class="line">    <span class="keyword">let</span> option <span class="operator">=</span> <span class="type">BMKWeatherSearchOption</span>()</span><br><span class="line">    option.districtID <span class="operator">=</span> <span class="string">&quot;110108&quot;</span></span><br><span class="line">    option.serverType <span class="operator">=</span> <span class="type">BMKWeatherServerTypeDefault</span></span><br><span class="line">    option.dataType <span class="operator">=</span> <span class="type">BMKWeatherDataTypeAll</span></span><br><span class="line">    option.languageType <span class="operator">=</span> <span class="type">BMKLanguageTypeEnglish</span></span><br><span class="line">    <span class="comment">// 发起搜索</span></span><br><span class="line">    <span class="keyword">let</span> flag <span class="operator">=</span> search.weatherSearch(option)</span><br><span class="line">    <span class="keyword">if</span> flag &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;天气查询检索发送成功&quot;</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;天气查询检索发送失败&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 回调函数</span></span><br><span class="line"><span class="keyword">func</span> <span class="title function_">onGetWeatherResult</span>(<span class="keyword">_</span> <span class="params">searcher</span>: <span class="type">BMKWeatherSearch</span>, <span class="params">result</span>: <span class="type">BMKWeatherSearchResult</span>, <span class="params">errorCode</span> <span class="params">error</span>: <span class="type">BMKSearchErrorCode</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> error <span class="operator">==</span> <span class="type">BMK_SEARCH_NO_ERROR</span> &#123;</span><br><span class="line">        <span class="comment">//在此处理正常结果</span></span><br><span class="line">        searchResult <span class="operator">=</span> result</span><br><span class="line">        weatherData <span class="operator">=</span> result.realTimeWeather</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;查询失败&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    showWeather()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="项目亮点"><a href="#项目亮点" class="headerlink" title="项目亮点"></a>项目亮点</h3><ol>
+<li>接入百度地图sdk，实现显示地图、标记地图、手势交互、poi检索、天气检索、定位等接口，极大的丰富了app的功能和可用性；</li>
+<li>整体界面简洁美观，交互性好，用户友好度高。</li>
+</ol>
+<h3 id="主要截图"><a href="#主要截图" class="headerlink" title="主要截图"></a>主要截图</h3><h3 id="项目展望"><a href="#项目展望" class="headerlink" title="项目展望"></a>项目展望</h3><ul>
+<li>导航实现：目前周边搜索结果展示界面的导航按钮是空壳，尚未实现导航功能（存在包冲突未解决，工单询问尚未得到回复）</li>
+<li>图片支持：日记支持图片的上传和查询</li>
+<li>用户名登录+足迹报告：将数据保存在特定用户下，使用username登录，输入另一个user的id可以挖掘两个user之间的足迹信息并展示</li>
+<li>多线程：目前app在模拟器上跑较卡顿，不知是硬件问题还是代码问题，后期可以实现多线程</li>
+</ul>
+<p>项目不足在于布局严重机械化，大部分ui都是手动编写而未采用tableview等布局，可扩展性差；代码未精简，冗余度高。</p>
+<h3 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h3><blockquote>
+<p>一些碎碎念</p>
+</blockquote>
+<p>一开始想到做一个地图，大概灵感有很早之前用过的一个APP里面可以看到小圈用户的实时位置，还有一些吵闹的小群喊话功能。搜索一些资料之后发现百度地图的sdk似乎还有点东西，于是就从官网给的文档开始一步步配环境到实现。</p>
+<p>在写代码的过程中，官方文档确实帮助了很多，一开始显示好地图之后特别开心；但是也发现了文档中的一些bug（这个太折磨人，例如百度给的annotation的默认图片是不存在的，当时搞了好久没办法把annotation显示在地图上），也提了几个工单来解决自己遇到的问题。另外就是上网找博客，尤其是环境配置那块（cocoapods还挺好用的），一些bundle identifier、pinfo什么的，收获还是蛮多。</p>
+<p>关于架构，开发到后期越来越觉得当初选storyboard不好，由于自己没有使用任何可视化编程，所以还不如一开始就用简洁一点的swiftUI，还能用更新的swiftdata。找博客的过程中也发现语言更新换代真的很快，感谢gpt帮我把objective-C或者老一点版本的swift代码转成swift让我cv（x。另外coredata一开始没有勾选导致还得后期配置，也掉了一些坑。</p>
+<p>关于界面，全部的icon都是在可画上下载的透明背景素材然后直接导入assets，给自己的发挥空间蛮大的（当然一开始就定了主色调和风格，整个开发下来自己还是比较满意的）</p>
+<p>最后很开心能够在一个多月的时间里把这个小小的APP完善到自己满意的版本（虽然展望还是一堆），但架构确实是依托（）</p>
+<p><strong>参考</strong></p>
+<p>百度地图开发文档：<a target="_blank" rel="noopener" href="https://lbsyun.baidu.com/faq/api?title=iossdk">https://lbsyun.baidu.com/faq/api?title=iossdk</a></p>
+<p>类参考：<a target="_blank" rel="noopener" href="https://mapopen-pub-iossdk.cdn.bcebos.com/map/v6_6_0/docs/html/index.html">https://mapopen-pub-iossdk.cdn.bcebos.com/map/v6_6_0/docs/html/index.html</a></p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/archives/">Archives</a></li>
+        
+          <li><a href="/tags/">Tags</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/Search/">Search</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#WalkDairy%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3"><span class="toc-number">1.</span> <span class="toc-text">WalkDairy设计文档</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#app%E7%AE%80%E4%BB%8B"><span class="toc-number">1.1.</span> <span class="toc-text">app简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7"><span class="toc-number">1.2.</span> <span class="toc-text">开发工具</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8A%9F%E8%83%BD%E4%BB%8B%E7%BB%8D"><span class="toc-number">1.3.</span> <span class="toc-text">功能介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9C%B0%E5%9B%BE%E6%98%BE%E7%A4%BA"><span class="toc-number">1.3.1.</span> <span class="toc-text">地图显示</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%97%A5%E8%AE%B0%E7%9B%B8%E5%85%B3"><span class="toc-number">1.3.2.</span> <span class="toc-text">日记相关</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%9A%E4%BD%8D%E7%9B%B8%E5%85%B3"><span class="toc-number">1.3.3.</span> <span class="toc-text">定位相关</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%91%A8%E8%BE%B9%E6%A3%80%E7%B4%A2"><span class="toc-number">1.3.4.</span> <span class="toc-text">周边检索</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A4%A9%E6%B0%94%E6%9C%8D%E5%8A%A1"><span class="toc-number">1.3.5.</span> <span class="toc-text">天气服务</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E7%AE%97%E6%B3%95"><span class="toc-number">1.4.</span> <span class="toc-text">关键算法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E7%A1%80%E5%9C%B0%E5%9B%BE%E6%9C%8D%E5%8A%A1-x2F-%E5%AE%9A%E4%BD%8D"><span class="toc-number">1.4.1.</span> <span class="toc-text">基础地图服务&#x2F;定位</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%B7%BB%E5%8A%A0-x2F-%E5%88%A0%E9%99%A4%E8%AE%B0%E5%BD%95"><span class="toc-number">1.4.2.</span> <span class="toc-text">添加&#x2F;删除记录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#annotation%E4%B8%AA%E6%80%A7%E5%8C%96"><span class="toc-number">1.4.3.</span> <span class="toc-text">annotation个性化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#poi%E4%BF%A1%E6%81%AF%E6%A3%80%E7%B4%A2-x2F-%E5%A4%A9%E6%B0%94%E4%BF%A1%E6%81%AF%E6%A3%80%E7%B4%A2"><span class="toc-number">1.4.4.</span> <span class="toc-text">poi信息检索&#x2F;天气信息检索</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#poi"><span class="toc-number">1.4.4.1.</span> <span class="toc-text">poi</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#weather"><span class="toc-number">1.4.4.2.</span> <span class="toc-text">weather</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A1%B9%E7%9B%AE%E4%BA%AE%E7%82%B9"><span class="toc-number">1.5.</span> <span class="toc-text">项目亮点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BB%E8%A6%81%E6%88%AA%E5%9B%BE"><span class="toc-number">1.6.</span> <span class="toc-text">主要截图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A1%B9%E7%9B%AE%E5%B1%95%E6%9C%9B"><span class="toc-number">1.7.</span> <span class="toc-text">项目展望</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%99%84%E5%BD%95"><span class="toc-number">1.8.</span> <span class="toc-text">附录</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&text=WalkDiary设计文档"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=WalkDiary设计文档"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&is_video=false&description=WalkDiary设计文档"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=WalkDiary设计文档&body=Check out this article: https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=WalkDiary设计文档"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=WalkDiary设计文档"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=WalkDiary设计文档"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&title=WalkDiary设计文档"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&name=WalkDiary设计文档&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://akkkkkkkkki.github.io/2023/12/24/WalkDiary%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/&t=WalkDiary设计文档"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2023
+    akkkkkkkkki
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Archives</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tags</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/Search/">Search</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
