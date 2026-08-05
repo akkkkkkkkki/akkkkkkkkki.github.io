@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#e8e2d6">
+  <title>上海地点手账</title>
+  <link rel="stylesheet" href="vendor/maplibre-gl.css">
+  <link rel="stylesheet" href="assets/map.css">
+</head>
+<body>
+  <div id="app" data-theme="warm">
+    <div id="map" aria-label="上海地点地图"></div>
+
+    <a class="icon-button corner-home" href="/" aria-label="返回博客" title="返回博客">
+      <svg aria-hidden="true"><use href="#icon-back"></use></svg>
+    </a>
+
+    <nav class="tool-dock" aria-label="地图工具">
+      <button class="icon-button is-active" id="view-button" aria-label="切换地图与手账" aria-pressed="false" title="地图 / 手账">
+        <svg aria-hidden="true"><use href="#icon-map"></use></svg>
+      </button>
+      <button class="icon-button" id="filter-button" aria-label="筛选与标签" aria-expanded="false" title="筛选与标签">
+        <svg aria-hidden="true"><use href="#icon-filter"></use></svg>
+        <span class="button-dot" id="filter-dot" hidden></span>
+      </button>
+      <button class="icon-button" id="collection-button" aria-label="命名点集" aria-expanded="false" title="命名点集">
+        <svg aria-hidden="true"><use href="#icon-network"></use></svg>
+      </button>
+      <button class="icon-button" id="theme-button" aria-label="切换昼夜主题" title="昼 / 夜">
+        <svg aria-hidden="true"><use href="#icon-moon"></use></svg>
+      </button>
+      <button class="icon-button" id="info-button" aria-label="地图信息" aria-expanded="false" title="地图信息">
+        <svg aria-hidden="true"><use href="#icon-info"></use></svg>
+        <span class="button-dot error-dot" id="error-dot" hidden></span>
+      </button>
+    </nav>
+
+    <nav class="edit-dock" id="edit-dock" aria-label="编辑工具" hidden>
+      <button class="icon-button" id="add-place-button" aria-label="新增地点" title="新增地点"><svg><use href="#icon-plus"></use></svg></button>
+      <button class="icon-button" id="edit-place-button" aria-label="编辑当前地点" title="编辑当前地点" disabled><svg><use href="#icon-edit"></use></svg></button>
+      <button class="icon-button" id="manage-collections-button" aria-label="管理点集" title="管理点集"><svg><use href="#icon-network"></use></svg></button>
+      <button class="icon-button" id="import-button" aria-label="导入 JSON" title="导入 JSON"><svg><use href="#icon-upload"></use></svg></button>
+      <button class="icon-button" id="export-button" aria-label="导出 JSON" title="导出 JSON"><svg><use href="#icon-download"></use></svg></button>
+      <input id="import-input" type="file" accept="application/json,.json" hidden>
+    </nav>
+
+    <aside class="floating-panel" id="filter-panel" aria-label="筛选与标签" hidden>
+      <header><h2>筛选</h2><button class="close-button" data-close="filter-panel" aria-label="关闭">×</button></header>
+      <fieldset class="category-options">
+        <legend>分类</legend>
+        <label><input type="checkbox" value="food" checked> <span class="category-mark food"></span>吃喝</label>
+        <label><input type="checkbox" value="walk" checked> <span class="category-mark walk"></span>散步</label>
+      </fieldset>
+      <div class="panel-section"><div class="section-heading"><span>标签</span><button class="text-button" id="clear-filter-button">清除</button></div><div class="tag-cloud" id="tag-cloud"></div></div>
+      <p class="result-count" id="result-count"></p>
+    </aside>
+
+    <aside class="floating-panel" id="collections-panel" aria-label="命名点集" hidden>
+      <header><h2>点集</h2><button class="close-button" data-close="collections-panel" aria-label="关闭">×</button></header>
+      <div id="collection-list" class="choice-list"></div>
+    </aside>
+
+    <aside class="floating-panel" id="info-panel" aria-label="地图信息" hidden>
+      <header><h2>地图信息</h2><button class="close-button" data-close="info-panel" aria-label="关闭">×</button></header>
+      <p>地图数据来自 <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>，静态底图由 <a href="https://protomaps.com" target="_blank" rel="noreferrer">Protomaps</a> 工具生成。</p>
+      <div id="data-errors" class="data-errors" hidden></div>
+      <p class="muted">地点内容保存在本站的静态 JSON 中，不会上传到地图服务。</p>
+    </aside>
+
+    <aside id="journal-panel" class="journal-panel" aria-label="地点手账" hidden>
+      <header><span id="journal-count"></span><button class="close-button" id="journal-close-button" aria-label="返回全屏地图">×</button></header>
+      <div id="journal-list" class="journal-list"></div>
+    </aside>
+
+    <aside id="details-panel" class="details-panel" aria-label="地点详情" hidden>
+      <button class="details-close" id="details-close-button" aria-label="关闭详情">×</button>
+      <div id="details-content"></div>
+    </aside>
+
+    <aside id="place-editor" class="editor-panel" aria-label="地点编辑器" hidden>
+      <header><h2 id="place-editor-title">新增地点</h2><button class="close-button" id="place-editor-close" aria-label="关闭">×</button></header>
+      <form id="place-form">
+        <input type="hidden" id="place-id">
+        <label>名称<input id="place-title" required maxlength="80"></label>
+        <label>分类<select id="place-category"><option value="food">吃喝</option><option value="walk">散步</option></select></label>
+        <label>标签<input id="place-tags" placeholder="咖啡，安静，梧桐"></label>
+        <div class="coordinate-row"><label>经度<input id="place-lng" type="number" step="any" required></label><label>纬度<input id="place-lat" type="number" step="any" required></label></div>
+        <label>文字<textarea id="place-text" rows="7" required></textarea></label>
+        <label>照片路径与替代文字<textarea id="place-photos" rows="4" placeholder="media/yuyuan/01.jpg | 窗边的咖啡"></textarea></label>
+        <p class="field-help">每张照片一行，使用“相对路径 | 替代文字”。照片文件需手动放入 media/。</p>
+        <div class="form-actions"><button type="button" class="danger-button" id="delete-place-button" hidden>删除</button><span></span><button type="button" class="soft-button" id="cancel-place-button">取消</button><button type="submit" class="primary-button">保存到当前编辑</button></div>
+      </form>
+    </aside>
+
+    <aside id="collection-editor" class="editor-panel" aria-label="点集编辑器" hidden>
+      <header><h2>管理点集</h2><button class="close-button" id="collection-editor-close" aria-label="关闭">×</button></header>
+      <div id="collection-editor-list" class="collection-editor-list"></div>
+      <form id="collection-form">
+        <input type="hidden" id="edit-collection-id">
+        <label>名称<input id="edit-collection-name" required maxlength="60"></label>
+        <label>颜色<input id="edit-collection-color" type="color" value="#A56E62"></label>
+        <fieldset><legend>地点成员</legend><div id="collection-members" class="member-list"></div></fieldset>
+        <div class="form-actions"><button type="button" class="danger-button" id="delete-collection-button" hidden>删除</button><span></span><button type="button" class="soft-button" id="new-collection-button">新建</button><button type="submit" class="primary-button">保存点集</button></div>
+      </form>
+    </aside>
+
+    <div id="loading" class="status-screen"><div class="loader"></div><p>正在展开上海地图…</p></div>
+    <div id="fatal-error" class="status-screen error-screen" hidden><h1>地图暂时没有展开</h1><p id="fatal-message"></p><button class="primary-button" id="retry-button">重试</button><a href="/">返回博客</a></div>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  </div>
+
+  <svg class="svg-defs" aria-hidden="true">
+    <symbol id="icon-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="icon-map" viewBox="0 0 24 24"><path d="m3 6 5-3 8 3 5-3v15l-5 3-8-3-5 3zM8 3v15M16 6v15"/></symbol>
+    <symbol id="icon-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+    <symbol id="icon-network" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.3"/><circle cx="18" cy="6" r="2.3"/><circle cx="14" cy="18" r="2.3"/><path d="m8.3 6.8 7.4-.6M7.4 9l5.2 7M17.1 8.2l-2.1 7.5"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20 15.3A8.4 8.4 0 0 1 8.7 4 8.5 8.5 0 1 0 20 15.3Z"/></symbol>
+    <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="icon-edit" viewBox="0 0 24 24"><path d="m4 20 4.3-1 10.8-10.8a2 2 0 0 0-2.8-2.8L5.5 16.2 4 20Z"/></symbol>
+    <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M12 16V4m0 0L7 9m5-5 5 5M5 20h14"/></symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 4v12m0 0 5-5m-5 5-5-5M5 20h14"/></symbol>
+  </svg>
+  <script src="vendor/maplibre-gl.js"></script>
+  <script src="vendor/pmtiles.js"></script>
+  <script src="vendor/basemaps.js"></script>
+  <script type="module" src="js/app.mjs"></script>
+</body>
+</html>

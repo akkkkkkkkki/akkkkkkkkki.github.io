@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "places": [
+    {
+      "id": "place_a17f20c4",
+      "title": "示例 · 武康路散步",
+      "category": "walk",
+      "tags": ["梧桐", "老建筑"],
+      "coordinates": [121.4384, 31.2054],
+      "text": "这里是一条示例记录。你可以在编辑模式里直接改掉它，或者删除后开始记录自己的上海。",
+      "photos": []
+    },
+    {
+      "id": "place_b38d52e1",
+      "title": "示例 · 苏州河畔",
+      "category": "food",
+      "tags": ["咖啡", "江边"],
+      "coordinates": [121.4711, 31.2452],
+      "text": "另一条示例记录，用来展示吃喝分类、自由标签和命名点集的关系线。",
+      "photos": []
+    }
+  ],
+  "collections": [
+    {
+      "id": "collection_f2a93b01",
+      "name": "示例点集",
+      "color": "#A56E62",
+      "placeIds": ["place_a17f20c4", "place_b38d52e1"]
+    }
+  ]
+}
