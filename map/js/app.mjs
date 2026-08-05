@@ -96,6 +96,15 @@ function addBusinessLayers() {
     map.addLayer({ id: "place-selected", type: "circle", source: "places", filter: ["==", ["get", "id"], ""], paint: {
       "circle-radius": 13, "circle-color": "transparent", "circle-stroke-width": 2, "circle-stroke-color": state.theme === "night" ? "#F0D689" : "#55483B"
     } });
+    map.addLayer({ id: "place-labels", type: "symbol", source: "places", filter: ["!", ["has", "point_count"]], layout: {
+      "text-field": ["get", "title"], "text-font": ["Noto Sans Regular"], "text-size": 11,
+      "text-anchor": "bottom", "text-offset": [0, -1], "text-max-width": 10, "text-padding": 3,
+      "text-letter-spacing": .01
+    }, paint: {
+      "text-color": state.theme === "night" ? "#D8E1DE" : "#554B41",
+      "text-halo-color": state.theme === "night" ? "#17282D" : "#FFF9EF",
+      "text-halo-width": 1.4, "text-halo-blur": .25
+    } });
   }
 }
 
@@ -106,17 +115,17 @@ function bindMapEvents() {
     const zoom = await map.getSource("places").getClusterExpansionZoom(feature.properties.cluster_id);
     map.easeTo({ center: feature.geometry.coordinates, zoom, duration: reducedMotion() ? 0 : 520 });
   });
-  map.on("click", "place-points", (event) => {
+  ["place-points", "place-labels"].forEach((layer) => map.on("click", layer, (event) => {
     const feature = event.features?.[0];
     if (feature) selectPlace(feature.properties.id, true);
-  });
-  ["place-clusters", "place-points"].forEach((layer) => {
+  }));
+  ["place-clusters", "place-points", "place-labels"].forEach((layer) => {
     map.on("mouseenter", layer, () => { map.getCanvas().style.cursor = "pointer"; });
     map.on("mouseleave", layer, () => { map.getCanvas().style.cursor = ""; });
   });
   map.on("click", (event) => {
     if (editor?.handleMapClick(event.lngLat)) return;
-    if (map.queryRenderedFeatures(event.point, { layers: ["place-clusters", "place-points"] }).length === 0) selectPlace(null);
+    if (map.queryRenderedFeatures(event.point, { layers: ["place-clusters", "place-points", "place-labels"] }).length === 0) selectPlace(null);
   });
   map.on("moveend", () => writeMapPosition());
 }
