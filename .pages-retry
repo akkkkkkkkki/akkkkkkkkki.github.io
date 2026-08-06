@@ -1,1 +1,1 @@
-Retry GitHub Pages deployment after the previous deploy job timed out.
+Retry GitHub Pages deployment after two transient deploy timeouts.
