@@ -1,7 +1,9 @@
 const CATEGORIES = new Set(["food", "walk"]);
-const PLACE_ID = /^place_[a-f0-9]{8}$/;
-const COLLECTION_ID = /^collection_[a-f0-9]{8}$/;
+const PLACE_ID = /^place_[a-f0-9]{8,32}$/;
+const ENTRY_ID = /^entry_[a-f0-9]{8,32}$/;
+const COLLECTION_ID = /^collection_[a-f0-9]{8,32}$/;
 const COLOR = /^#[a-f0-9]{6}$/i;
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 function issue(path, message) {
   return { path, message };
@@ -23,12 +25,12 @@ function validPhoto(photo) {
 
 export function validateData(raw) {
   const errors = [];
-  const data = { version: 1, places: [], collections: [] };
+  const data = { version: 2, places: [], collections: [] };
 
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
     return { data, errors: [issue("$", "数据根节点必须是对象")] };
   }
-  if (raw.version !== 1) errors.push(issue("version", "只支持 version: 1"));
+  if (raw.version !== 1 && raw.version !== 2) errors.push(issue("version", "只支持 version: 1 或 version: 2"));
   if (!Array.isArray(raw.places)) errors.push(issue("places", "places 必须是数组"));
 
   const placeIds = new Set();
@@ -48,9 +50,11 @@ export function validateData(raw) {
       Math.abs(place.coordinates[0]) > 180 || Math.abs(place.coordinates[1]) > 90) {
       local.push("坐标必须是合法的 [经度, 纬度]");
     }
-    if (typeof place.text !== "string" || !place.text.trim()) local.push("地点文字不能为空");
-    if (!Array.isArray(place.photos)) local.push("photos 必须是数组");
-    else if (place.photos.some((photo) => !validPhoto(photo))) local.push("照片必须使用安全的 media/ 相对路径并填写 alt");
+    const entries = normalizeEntries(place, path, errors);
+    if (!entries.length) local.push("地点至少需要一条访问记录");
+    const photos = place.photos == null ? [] : place.photos;
+    if (!Array.isArray(photos)) local.push("photos 必须是数组");
+    else if (photos.some((photo) => !validPhoto(photo))) local.push("照片必须使用安全的 media/ 相对路径并填写 alt");
 
     if (local.length) {
       local.forEach((message) => errors.push(issue(path, message)));
@@ -63,8 +67,9 @@ export function validateData(raw) {
       category: place.category,
       tags: cleanTags(place.tags),
       coordinates: [place.coordinates[0], place.coordinates[1]],
-      text: place.text.trim(),
-      photos: place.photos.map((photo) => ({ src: photo.src, alt: photo.alt.trim() }))
+      entries,
+      text: entries.at(-1).text,
+      photos: photos.map((photo) => ({ src: photo.src, alt: photo.alt.trim() }))
     });
   }
 
@@ -103,6 +108,43 @@ export function validateData(raw) {
   }
 
   return { data, errors };
+}
+
+function normalizeEntries(place, path, errors) {
+  if (!Array.isArray(place.entries)) {
+    if (typeof place.text !== "string" || !place.text.trim()) return [];
+    return [{ id: `entry_${String(place.id || "").replace(/^place_/, "")}`, text: place.text.trim(), visitedOn: null }];
+  }
+  const entries = [];
+  const ids = new Set();
+  place.entries.forEach((entry, index) => {
+    const entryPath = `${path}.entries[${index}]`;
+    if (!entry || typeof entry !== "object") {
+      errors.push(issue(entryPath, "访问记录必须是对象"));
+      return;
+    }
+    if (!ENTRY_ID.test(entry.id || "") || ids.has(entry.id)) {
+      errors.push(issue(entryPath, "访问记录 ID 格式错误或重复"));
+      return;
+    }
+    if (typeof entry.text !== "string" || !entry.text.trim()) {
+      errors.push(issue(entryPath, "访问记录文字不能为空"));
+      return;
+    }
+    if (entry.visitedOn != null && entry.visitedOn !== "" && (typeof entry.visitedOn !== "string" || !DATE.test(entry.visitedOn))) {
+      errors.push(issue(entryPath, "访问日期必须是 YYYY-MM-DD"));
+      return;
+    }
+    ids.add(entry.id);
+    entries.push({
+      id: entry.id,
+      text: entry.text.trim(),
+      visitedOn: entry.visitedOn || null,
+      ...(typeof entry.createdAt === "string" ? { createdAt: entry.createdAt } : {}),
+      ...(typeof entry.updatedAt === "string" ? { updatedAt: entry.updatedAt } : {})
+    });
+  });
+  return entries;
 }
 
 export function filterPlaces(places, filters = {}) {

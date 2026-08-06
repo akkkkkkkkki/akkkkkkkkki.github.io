@@ -27,6 +27,9 @@
       <button class="icon-button" id="collection-button" aria-label="命名点集" aria-expanded="false" title="命名点集">
         <svg aria-hidden="true"><use href="#icon-network"></use></svg>
       </button>
+      <button class="icon-button" id="contribute-button" aria-label="投稿地点" aria-expanded="false" title="投稿地点">
+        <svg aria-hidden="true"><use href="#icon-pin-plus"></use></svg>
+      </button>
       <button class="icon-button" id="theme-button" aria-label="切换昼夜主题" title="昼 / 夜">
         <svg aria-hidden="true"><use href="#icon-moon"></use></svg>
       </button>
@@ -34,15 +37,6 @@
         <svg aria-hidden="true"><use href="#icon-info"></use></svg>
         <span class="button-dot error-dot" id="error-dot" hidden></span>
       </button>
-    </nav>
-
-    <nav class="edit-dock" id="edit-dock" aria-label="编辑工具" hidden>
-      <button class="icon-button" id="add-place-button" aria-label="新增地点" title="新增地点"><svg><use href="#icon-plus"></use></svg></button>
-      <button class="icon-button" id="edit-place-button" aria-label="编辑当前地点" title="编辑当前地点" disabled><svg><use href="#icon-edit"></use></svg></button>
-      <button class="icon-button" id="manage-collections-button" aria-label="管理点集" title="管理点集"><svg><use href="#icon-network"></use></svg></button>
-      <button class="icon-button" id="import-button" aria-label="导入 JSON" title="导入 JSON"><svg><use href="#icon-upload"></use></svg></button>
-      <button class="icon-button" id="export-button" aria-label="导出 JSON" title="导出 JSON"><svg><use href="#icon-download"></use></svg></button>
-      <input id="import-input" type="file" accept="application/json,.json" hidden>
     </nav>
 
     <aside class="floating-panel" id="filter-panel" aria-label="筛选与标签" hidden>
@@ -65,7 +59,7 @@
       <header><h2>地图信息</h2><button class="close-button" data-close="info-panel" aria-label="关闭">×</button></header>
       <p>地图数据来自 <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>，静态底图由 <a href="https://protomaps.com" target="_blank" rel="noreferrer">Protomaps</a> 工具生成。</p>
       <div id="data-errors" class="data-errors" hidden></div>
-      <p class="muted">地点内容保存在本站的静态 JSON 中，不会上传到地图服务。</p>
+      <p class="muted">地点内容由本站维护；云端暂时不可用时会自动使用静态备份。</p>
     </aside>
 
     <aside id="journal-panel" class="journal-panel" aria-label="地点手账" hidden>
@@ -78,31 +72,23 @@
       <div id="details-content"></div>
     </aside>
 
-    <aside id="place-editor" class="editor-panel" aria-label="地点编辑器" hidden>
-      <header><h2 id="place-editor-title">新增地点</h2><button class="close-button" id="place-editor-close" aria-label="关闭">×</button></header>
-      <form id="place-form">
-        <input type="hidden" id="place-id">
-        <label>名称<input id="place-title" required maxlength="80"></label>
-        <label>分类<select id="place-category"><option value="food">吃喝</option><option value="walk">散步</option></select></label>
-        <label>标签<input id="place-tags" placeholder="咖啡，安静，梧桐"></label>
-        <div class="coordinate-row"><label>经度<input id="place-lng" type="number" step="any" required></label><label>纬度<input id="place-lat" type="number" step="any" required></label></div>
-        <label>文字<textarea id="place-text" rows="7" required></textarea></label>
-        <label>照片路径与替代文字<textarea id="place-photos" rows="4" placeholder="media/yuyuan/01.jpg | 窗边的咖啡"></textarea></label>
-        <p class="field-help">每张照片一行，使用“相对路径 | 替代文字”。照片文件需手动放入 media/。</p>
-        <div class="form-actions"><button type="button" class="danger-button" id="delete-place-button" hidden>删除</button><span></span><button type="button" class="soft-button" id="cancel-place-button">取消</button><button type="submit" class="primary-button">保存到当前编辑</button></div>
+    <aside id="contribute-panel" class="editor-panel contribute-panel" aria-label="投稿地点" hidden>
+      <header><h2>投稿地点</h2><button class="close-button" id="contribute-close" aria-label="关闭">×</button></header>
+      <form id="invite-form">
+        <label>Key<input id="invite-key" autocomplete="off" required maxlength="100"></label>
+        <div class="compact-actions"><span id="invite-status" class="field-help"></span><button type="submit" class="soft-button" id="verify-key-button">确认</button></div>
       </form>
-    </aside>
-
-    <aside id="collection-editor" class="editor-panel" aria-label="点集编辑器" hidden>
-      <header><h2>管理点集</h2><button class="close-button" id="collection-editor-close" aria-label="关闭">×</button></header>
-      <div id="collection-editor-list" class="collection-editor-list"></div>
-      <form id="collection-form">
-        <input type="hidden" id="edit-collection-id">
-        <label>名称<input id="edit-collection-name" required maxlength="60"></label>
-        <label>颜色<input id="edit-collection-color" type="color" value="#A56E62"></label>
-        <fieldset><legend>地点成员</legend><div id="collection-members" class="member-list"></div></fieldset>
-        <div class="form-actions"><button type="button" class="danger-button" id="delete-collection-button" hidden>删除</button><span></span><button type="button" class="soft-button" id="new-collection-button">新建</button><button type="submit" class="primary-button">保存点集</button></div>
-      </form>
+      <div id="contribution-fields" hidden>
+        <form id="contribution-form">
+          <label>名称<input id="contribution-title" required maxlength="80"></label>
+          <label>分类<select id="contribution-category"><option value="food">吃喝</option><option value="walk">散步</option></select></label>
+          <label>标签<input id="contribution-tags" maxlength="300" placeholder="咖啡，安静，梧桐"></label>
+          <input id="contribution-lng" type="hidden"><input id="contribution-lat" type="hidden">
+          <div class="location-picker"><span id="location-summary">尚未选择位置</span><button type="button" class="soft-button" id="choose-location-button">在地图上选点</button></div>
+          <label>文字<textarea id="contribution-text" rows="7" required maxlength="5000"></textarea></label>
+          <div class="form-actions contribute-actions"><button type="submit" class="primary-button" id="submit-contribution-button">提交</button></div>
+        </form>
+      </div>
     </aside>
 
     <div id="loading" class="status-screen"><div class="loader"></div><p>loading map...</p></div>
@@ -117,6 +103,7 @@
     <symbol id="icon-network" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.3"/><circle cx="18" cy="6" r="2.3"/><circle cx="14" cy="18" r="2.3"/><path d="m8.3 6.8 7.4-.6M7.4 9l5.2 7M17.1 8.2l-2.1 7.5"/></symbol>
     <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20 15.3A8.4 8.4 0 0 1 8.7 4 8.5 8.5 0 1 0 20 15.3Z"/></symbol>
     <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
+    <symbol id="icon-pin-plus" viewBox="0 0 24 24"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><path d="M12 7v6M9 10h6"/></symbol>
     <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
     <symbol id="icon-edit" viewBox="0 0 24 24"><path d="m4 20 4.3-1 10.8-10.8a2 2 0 0 0-2.8-2.8L5.5 16.2 4 20Z"/></symbol>
     <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M12 16V4m0 0L7 9m5-5 5 5M5 20h14"/></symbol>
@@ -125,6 +112,7 @@
   <script src="vendor/maplibre-gl.js"></script>
   <script src="vendor/pmtiles.js"></script>
   <script src="vendor/basemaps.js"></script>
+  <script src="config.js"></script>
   <script type="module" src="js/app.mjs"></script>
 </body>
 </html>

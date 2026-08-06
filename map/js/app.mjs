@@ -1,16 +1,17 @@
-import { buildCollectionLines, filterPlaces, getTagStats, toGeoJSON, validateData } from "./data-store.mjs";
-import { createEditor } from "./editor.mjs";
+import { buildCollectionLines, filterPlaces, getTagStats, toGeoJSON } from "./data-store.mjs";
+import { loadMapData } from "./api-client.mjs";
+import { createContributor } from "./contributor.mjs";
 import { createMapStyle } from "./map-style.mjs";
 
 const $ = (id) => document.getElementById(id);
 const state = {
-  data: { version: 1, places: [], collections: [] }, errors: [],
+  data: { version: 2, places: [], collections: [] }, errors: [],
   categories: new Set(["food", "walk"]), tags: new Set(), activeCollectionId: null,
   selectedId: null, theme: safePreference("map-theme", "warm"), view: safePreference("map-view", "map")
 };
 let map;
 let popup;
-let editor;
+let contributor;
 let toastTimer;
 
 boot().catch(showFatal);
@@ -20,9 +21,7 @@ async function boot() {
     throw new Error("地图运行库没有正确加载");
   }
 
-  const response = await fetch("data/map-data.json", { cache: "no-store" });
-  if (!response.ok) throw new Error(`地点数据加载失败（${response.status}）`);
-  const result = validateData(await response.json());
+  const result = await loadMapData();
   state.data = result.data;
   state.errors = result.errors;
 
@@ -51,18 +50,14 @@ async function boot() {
   addBusinessLayers();
   bindMapEvents();
   bindUI();
+  contributor = createContributor({
+    map,
+    showToast,
+    closeOtherPanels: () => { closePanels(); closeDetails(); },
+    reloadData
+  });
   renderAll();
   setView(state.view, false);
-
-  if (new URLSearchParams(location.search).get("edit") === "1") {
-    editor = createEditor({
-      map,
-      getData: () => state.data,
-      setData: replaceData,
-      getSelectedId: () => state.selectedId,
-      showToast
-    });
-  }
 
   $("loading").hidden = true;
 }
@@ -124,7 +119,7 @@ function bindMapEvents() {
     map.on("mouseleave", layer, () => { map.getCanvas().style.cursor = ""; });
   });
   map.on("click", (event) => {
-    if (editor?.handleMapClick(event.lngLat)) return;
+    if (contributor?.handleMapClick(event.lngLat)) return;
     if (map.queryRenderedFeatures(event.point, { layers: ["place-clusters", "place-points", "place-labels"] }).length === 0) selectPlace(null);
   });
   map.on("moveend", () => writeMapPosition());
@@ -170,6 +165,7 @@ function bindPanelButton(buttonId, panelId) {
 
 function closePanels() {
   ["filter-panel", "collections-panel", "info-panel"].forEach((id) => closePanel(id));
+  contributor?.close();
 }
 
 function closePanel(id) {
@@ -200,7 +196,6 @@ function renderAll() {
   $("result-count").textContent = `${places.length} / ${state.data.places.length} 个地点`;
   $("filter-dot").hidden = state.categories.size === 2 && state.tags.size === 0;
   if (state.selectedId && !places.some((place) => place.id === state.selectedId)) selectPlace(null);
-  editor?.refresh();
 }
 
 function renderTags() {
@@ -261,7 +256,6 @@ function renderJournal(places) {
 
 function selectPlace(id, move = false) {
   state.selectedId = id;
-  editor?.onSelection(id);
   if (map.getLayer("place-selected")) map.setFilter("place-selected", ["==", ["get", "id"], id || ""]);
   popup?.remove(); popup = null;
   document.querySelectorAll(".journal-item").forEach((item) => item.classList.toggle("is-active", item.dataset.id === id));
@@ -294,8 +288,17 @@ function openDetails(place) {
   const content = $("details-content"); content.innerHTML = "";
   const title = document.createElement("h1"); title.textContent = place.title;
   const tags = createMiniTags(place);
-  const text = document.createElement("div"); text.className = "details-text"; text.textContent = place.text;
-  content.append(title, tags, text);
+  const entries = document.createElement("div"); entries.className = "visit-entries";
+  place.entries.forEach((entry) => {
+    const wrap = document.createElement("section"); wrap.className = "visit-entry";
+    if (entry.visitedOn) {
+      const date = document.createElement("p"); date.className = "visit-entry-date"; date.textContent = entry.visitedOn;
+      wrap.append(date);
+    }
+    const text = document.createElement("p"); text.className = "visit-entry-text"; text.textContent = entry.text;
+    wrap.append(text); entries.append(wrap);
+  });
+  content.append(title, tags, entries);
   if (place.photos.length) {
     const grid = document.createElement("div"); grid.className = "photo-grid";
     place.photos.forEach((photo) => {
@@ -341,6 +344,11 @@ function replaceData(data, errors) {
   state.activeCollectionId = null;
   selectPlace(null);
   renderAll();
+}
+
+async function reloadData() {
+  const result = await loadMapData();
+  replaceData(result.data, result.errors);
 }
 
 function showToast(message) {
