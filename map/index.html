@@ -27,7 +27,7 @@
       <button class="icon-button" id="collection-button" aria-label="命名点集" aria-expanded="false" title="命名点集">
         <svg aria-hidden="true"><use href="#icon-network"></use></svg>
       </button>
-      <button class="icon-button" id="contribute-button" aria-label="投稿地点" aria-expanded="false" title="投稿地点">
+      <button class="icon-button" id="contribute-button" aria-label="投稿" aria-expanded="false" title="投稿">
         <svg aria-hidden="true"><use href="#icon-pin-plus"></use></svg>
       </button>
       <button class="icon-button" id="theme-button" aria-label="切换昼夜主题" title="昼 / 夜">
@@ -59,7 +59,7 @@
       <header><h2>地图信息</h2><button class="close-button" data-close="info-panel" aria-label="关闭">×</button></header>
       <p>地图数据来自 <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>，静态底图由 <a href="https://protomaps.com" target="_blank" rel="noreferrer">Protomaps</a> 工具生成。</p>
       <div id="data-errors" class="data-errors" hidden></div>
-      <p class="muted">地点内容由本站维护；云端暂时不可用时会自动使用静态备份。</p>
+      <p class="muted">更多地图待解锁，意见和 idea 欢迎联系：<a href="mailto:1685700675@qq.com">1685700675@qq.com</a></p>
     </aside>
 
     <aside id="journal-panel" class="journal-panel" aria-label="地点手账" hidden>
@@ -72,8 +72,8 @@
       <div id="details-content"></div>
     </aside>
 
-    <aside id="contribute-panel" class="editor-panel contribute-panel" aria-label="投稿地点" hidden>
-      <header><h2>投稿地点</h2><button class="close-button" id="contribute-close" aria-label="关闭">×</button></header>
+    <aside id="contribute-panel" class="editor-panel contribute-panel" aria-label="投稿" hidden>
+      <header><h2>投稿</h2><button class="close-button" id="contribute-close" aria-label="关闭">×</button></header>
       <form id="invite-form">
         <label>Key<input id="invite-key" autocomplete="off" required maxlength="100"></label>
         <div class="compact-actions"><span id="invite-status" class="field-help"></span><button type="submit" class="soft-button" id="verify-key-button">确认</button></div>
