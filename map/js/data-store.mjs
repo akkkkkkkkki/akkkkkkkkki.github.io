@@ -140,6 +140,9 @@ function normalizeEntries(place, path, errors) {
       id: entry.id,
       text: entry.text.trim(),
       visitedOn: entry.visitedOn || null,
+      contributorName: typeof entry.contributorName === "string" && entry.contributorName.trim().length <= 40
+        ? entry.contributorName.trim() || null
+        : null,
       ...(typeof entry.createdAt === "string" ? { createdAt: entry.createdAt } : {}),
       ...(typeof entry.updatedAt === "string" ? { updatedAt: entry.updatedAt } : {})
     });

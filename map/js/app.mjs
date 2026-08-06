@@ -2,6 +2,7 @@ import { buildCollectionLines, filterPlaces, getTagStats, toGeoJSON } from "./da
 import { loadMapData } from "./api-client.mjs";
 import { createContributor } from "./contributor.mjs";
 import { createMapStyle } from "./map-style.mjs";
+import { hidePanel, panelIsOpen, showPanel } from "./panel-motion.mjs";
 
 const $ = (id) => document.getElementById(id);
 const state = {
@@ -156,9 +157,9 @@ function bindUI() {
 
 function bindPanelButton(buttonId, panelId) {
   $(buttonId).addEventListener("click", () => {
-    const willOpen = $(panelId).hidden;
+    const willOpen = !panelIsOpen($(panelId));
     closePanels();
-    $(panelId).hidden = !willOpen;
+    if (willOpen) showPanel($(panelId));
     $(buttonId).setAttribute("aria-expanded", String(willOpen));
   });
 }
@@ -169,7 +170,7 @@ function closePanels() {
 }
 
 function closePanel(id) {
-  $(id).hidden = true;
+  hidePanel($(id));
   const button = { "filter-panel": "filter-button", "collections-panel": "collection-button", "info-panel": "info-button" }[id];
   if (button) $(button).setAttribute("aria-expanded", "false");
 }
@@ -218,7 +219,7 @@ function renderCollections() {
   $("collection-list").innerHTML = "";
   const all = document.createElement("button");
   all.className = `choice-button${state.activeCollectionId ? "" : " is-active"}`;
-  all.textContent = "显示全部地点";
+  all.textContent = "Show all";
   all.addEventListener("click", () => { state.activeCollectionId = null; renderAll(); closePanel("collections-panel"); });
   $("collection-list").append(all);
   state.data.collections.forEach((collection) => {
@@ -296,9 +297,21 @@ function openDetails(place) {
       wrap.append(date);
     }
     const text = document.createElement("p"); text.className = "visit-entry-text"; text.textContent = entry.text;
-    wrap.append(text); entries.append(wrap);
+    wrap.append(text);
+    if (entry.contributorName) {
+      const from = document.createElement("p"); from.className = "visit-entry-from"; from.textContent = `from: ${entry.contributorName}`;
+      wrap.append(from);
+    }
+    entries.append(wrap);
   });
-  content.append(title, tags, entries);
+  const addEntry = document.createElement("button");
+  addEntry.className = "details-add-entry";
+  addEntry.type = "button";
+  addEntry.textContent = "+";
+  addEntry.setAttribute("aria-label", "为这个地点新增记录");
+  addEntry.title = "为这个地点新增记录";
+  addEntry.addEventListener("click", () => contributor?.openForPlace(place));
+  content.append(title, tags, entries, addEntry);
   if (place.photos.length) {
     const grid = document.createElement("div"); grid.className = "photo-grid";
     place.photos.forEach((photo) => {
@@ -308,16 +321,16 @@ function openDetails(place) {
     });
     content.append(grid);
   }
-  $("details-panel").hidden = false;
+  showPanel($("details-panel"));
 }
 
-function closeDetails() { $("details-panel").hidden = true; }
+function closeDetails() { hidePanel($("details-panel")); }
 
 function setView(view, persist = true) {
   state.view = view === "journal" ? "journal" : "map";
   const journal = state.view === "journal";
   $("app").classList.toggle("is-journal", journal);
-  $("journal-panel").hidden = !journal;
+  if (journal) showPanel($("journal-panel")); else hidePanel($("journal-panel"));
   $("view-button").setAttribute("aria-pressed", String(journal));
   $("view-button").classList.toggle("is-active", !journal);
   if (persist) safeSet("map-view", state.view);

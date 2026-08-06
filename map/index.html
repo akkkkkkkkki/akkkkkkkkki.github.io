@@ -46,7 +46,7 @@
         <label><input type="checkbox" value="food" checked> <span class="category-mark food"></span>吃喝</label>
         <label><input type="checkbox" value="walk" checked> <span class="category-mark walk"></span>散步</label>
       </fieldset>
-      <div class="panel-section"><div class="section-heading"><span>标签</span><button class="text-button" id="clear-filter-button">清除</button></div><div class="tag-cloud" id="tag-cloud"></div></div>
+      <div class="panel-section"><div class="section-heading"><span>标签</span><button class="text-button" id="clear-filter-button">Clear</button></div><div class="tag-cloud" id="tag-cloud"></div></div>
       <p class="result-count" id="result-count"></p>
     </aside>
 
@@ -76,23 +76,35 @@
       <header><h2>投稿</h2><button class="close-button" id="contribute-close" aria-label="关闭">×</button></header>
       <form id="invite-form">
         <label>Key<input id="invite-key" autocomplete="off" required maxlength="100"></label>
-        <div class="compact-actions"><span id="invite-status" class="field-help"></span><button type="submit" class="soft-button" id="verify-key-button">确认</button></div>
+        <div class="compact-actions"><span id="invite-status" class="field-help"></span><button type="submit" class="soft-button" id="verify-key-button">Verify</button></div>
+      </form>
+      <button type="button" class="text-button apply-key-button" id="show-key-request-button">Apply for a key</button>
+      <form id="key-request-form" hidden>
+        <label>昵称<input id="key-request-name" required maxlength="40"></label>
+        <label>邮箱<input id="key-request-email" type="email" required maxlength="254"></label>
+        <label>申请说明（可选）<textarea id="key-request-note" rows="4" maxlength="500"></textarea></label>
+        <div class="form-actions request-actions"><button type="button" class="soft-button" id="cancel-key-request-button">Cancel</button><button type="submit" class="primary-button icon-action" id="submit-key-request-button" aria-label="提交申请" title="提交申请">✓</button></div>
       </form>
       <div id="contribution-fields" hidden>
         <form id="contribution-form">
-          <label>名称<input id="contribution-title" required maxlength="80"></label>
-          <label>分类<select id="contribution-category"><option value="food">吃喝</option><option value="walk">散步</option></select></label>
-          <label>标签<input id="contribution-tags" maxlength="300" placeholder="咖啡，安静，梧桐"></label>
+          <p class="contribution-mode" id="contribution-mode"></p>
+          <div id="new-place-fields">
+            <label>名称<input id="contribution-title" maxlength="80"></label>
+            <label>分类<select id="contribution-category"><option value="food">吃喝</option><option value="walk">散步</option></select></label>
+            <label>标签<input id="contribution-tags" maxlength="300" placeholder="咖啡，安静，梧桐"></label>
+          </div>
           <input id="contribution-lng" type="hidden"><input id="contribution-lat" type="hidden">
-          <div class="location-picker"><span id="location-summary">尚未选择位置</span><button type="button" class="soft-button" id="choose-location-button">在地图上选点</button></div>
+          <input id="contribution-place-id" type="hidden">
+          <div class="location-picker" id="location-picker"><span id="location-summary">尚未选择位置</span><button type="button" class="soft-button icon-action" id="choose-location-button" aria-label="在地图上选点" title="在地图上选点"><svg aria-hidden="true"><use href="#icon-pin-plus"></use></svg></button></div>
+          <label>日期（可选）<input id="contribution-date" type="date"></label>
           <label>文字<textarea id="contribution-text" rows="7" required maxlength="5000"></textarea></label>
-          <div class="form-actions contribute-actions"><button type="submit" class="primary-button" id="submit-contribution-button">提交</button></div>
+          <div class="form-actions contribute-actions"><button type="submit" class="primary-button icon-action" id="submit-contribution-button" aria-label="提交" title="提交">✓</button></div>
         </form>
       </div>
     </aside>
 
     <div id="loading" class="status-screen"><div class="loader"></div><p>loading map...</p></div>
-    <div id="fatal-error" class="status-screen error-screen" hidden><h1>地图暂时没有展开</h1><p id="fatal-message"></p><button class="primary-button" id="retry-button">重试</button><a href="/">返回博客</a></div>
+    <div id="fatal-error" class="status-screen error-screen" hidden><h1>地图暂时没有展开</h1><p id="fatal-message"></p><button class="primary-button" id="retry-button">Retry</button><a href="/">返回博客</a></div>
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   </div>
 

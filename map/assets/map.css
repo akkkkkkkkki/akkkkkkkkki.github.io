@@ -50,11 +50,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   position: fixed; z-index: 35; top: calc(var(--safe-top) + 58px); right: var(--safe-right); width: min(310px, calc(100vw - 28px));
   max-height: calc(100vh - 86px); overflow: auto; padding: 16px; border: 1px solid var(--border); border-radius: 17px;
   color: var(--ink); background: color-mix(in srgb, var(--paper) 94%, transparent); box-shadow: var(--shadow); backdrop-filter: blur(16px);
-  animation: panel-in .18s ease-out;
+  opacity: 0; transform: translateY(9px); transition: opacity .19s ease, transform .19s ease, visibility .19s;
 }
+.floating-panel.is-open, .editor-panel.is-open { opacity: 1; transform: translateY(0); }
 .editor-panel { left: var(--safe-left); right: auto; top: calc(var(--safe-top) + 104px); width: min(390px, calc(100vw - 28px)); }
 .contribute-panel { top: calc(var(--safe-top) + 58px); }
-@keyframes panel-in { from { opacity: 0; transform: translateY(-5px); } }
 .floating-panel header, .editor-panel header, .journal-panel header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .floating-panel h2, .editor-panel h2 { margin: 0; font: 600 16px/1.3 ui-serif, "Songti SC", serif; }
 .close-button, .details-close { width: 30px; height: 30px; border: 0; border-radius: 9px; color: var(--muted); background: transparent; font-size: 21px; cursor: pointer; }
@@ -99,9 +99,10 @@ legend { margin-bottom: 9px; color: var(--muted); font-size: 12px; }
 .details-panel {
   position: fixed; z-index: 34; top: var(--safe-top); right: var(--safe-right); bottom: var(--safe-bottom); width: min(420px, calc(100vw - 28px));
   overflow: auto; padding: 28px 24px; border: 1px solid var(--border); border-radius: 20px; color: var(--ink);
-  background: color-mix(in srgb, var(--paper-solid) 97%, transparent); box-shadow: var(--shadow); backdrop-filter: blur(16px); animation: details-in .22s ease-out;
+  background: color-mix(in srgb, var(--paper-solid) 97%, transparent); box-shadow: var(--shadow); backdrop-filter: blur(16px);
+  opacity: 0; transform: translateX(10px); transition: opacity .19s ease, transform .19s ease, visibility .19s;
 }
-@keyframes details-in { from { opacity: 0; transform: translateX(12px); } }
+.details-panel.is-open { opacity: 1; transform: translateX(0); }
 .details-close { position: absolute; right: 13px; top: 12px; }
 .details-panel h1 { margin: 0 38px 11px 0; font: 600 25px/1.25 ui-serif, "Songti SC", serif; }
 .details-text { margin: 22px 0; white-space: pre-wrap; line-height: 1.85; font-size: 14px; }
@@ -110,17 +111,23 @@ legend { margin-bottom: 9px; color: var(--muted); font-size: 12px; }
 .visit-entry:first-child { padding-top: 0; border-top: 0; }
 .visit-entry-date { margin: 0 0 7px; color: var(--muted); font-size: 10px; }
 .visit-entry-text { margin: 0; white-space: pre-wrap; line-height: 1.85; font-size: 14px; }
+.visit-entry-from { margin: 7px 0 0; color: color-mix(in srgb, var(--muted) 72%, transparent); font-size: 9px; letter-spacing: .02em; }
+.details-add-entry { display: grid; width: 34px; height: 34px; margin: 18px 0 0 auto; place-items: center; border: 0; border-radius: 11px; color: #fff; background: var(--accent); cursor: pointer; font-size: 20px; transition: transform .16s ease, opacity .16s ease; }
+.details-add-entry:hover { transform: translateY(-1px); }
+.details-add-entry:active { transform: scale(.94); }
 .photo-grid { display: grid; gap: 10px; }
 .photo-grid img { display: block; width: 100%; height: auto; max-height: 480px; object-fit: cover; border-radius: 12px; background: #e5ded2; }
 .photo-fallback { display: grid; min-height: 120px; place-items: center; border-radius: 12px; color: var(--muted); background: #e5ded2; font-size: 12px; }
 
-.journal-panel { position: fixed; z-index: 20; top: 0; right: 0; bottom: 0; width: min(40vw, 470px); overflow: hidden; color: var(--ink); background: color-mix(in srgb, var(--paper-solid) 97%, transparent); box-shadow: -8px 0 28px rgba(52,43,32,.14); }
+.journal-panel { position: fixed; z-index: 20; top: 0; right: 0; bottom: 0; width: min(40vw, 470px); overflow: hidden; color: var(--ink); background: color-mix(in srgb, var(--paper-solid) 97%, transparent); box-shadow: -8px 0 28px rgba(52,43,32,.14); opacity: 0; transform: translateX(10px); transition: opacity .19s ease, transform .19s ease; }
+.journal-panel.is-open { opacity: 1; transform: translateX(0); }
 .journal-panel header { height: 60px; padding: 0 16px; border-bottom: 1px solid var(--border); color: var(--muted); font-size: 12px; }
 .journal-list { height: calc(100% - 60px); overflow: auto; padding: 10px; }
 .journal-item { width: 100%; padding: 14px; border: 0; border-bottom: 1px solid var(--border); color: var(--ink); background: transparent; text-align: left; cursor: pointer; }
 .journal-item:hover, .journal-item.is-active { border-radius: 12px; background: rgba(130,110,85,.08); }
 .journal-item h3 { margin: 0 0 7px; font: 600 14px/1.4 ui-serif, "Songti SC", serif; }
 .journal-item p { margin: 8px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+#map, .tool-dock { transition: width .19s ease, right .19s ease; }
 #app.is-journal #map { width: calc(100% - min(40vw, 470px)); }
 #app.is-journal .tool-dock { right: calc(min(40vw, 470px) + var(--safe-right)); }
 
@@ -133,11 +140,17 @@ legend { margin-bottom: 9px; color: var(--muted); font-size: 12px; }
 .contribute-actions { display: flex; justify-content: flex-end; }
 .compact-actions, .location-picker { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin-top: 10px; }
 .compact-actions .field-help { margin: 0; }
+.apply-key-button { margin-top: 10px; padding: 3px 0; }
+.contribution-mode { margin: 12px 0 2px; color: var(--muted); font-size: 10px; letter-spacing: .03em; }
 .location-picker { padding: 9px 0; color: var(--muted); font-size: 10px; }
 .primary-button, .soft-button, .danger-button { border: 0; border-radius: 10px; padding: 9px 12px; cursor: pointer; }
+.primary-button:disabled, .soft-button:disabled, .danger-button:disabled { opacity: .45; cursor: wait; }
 .primary-button { color: #fff; background: var(--accent); }
 .soft-button { color: var(--ink); background: rgba(130,110,85,.1); }
 .danger-button { color: #fff; background: var(--danger); }
+.icon-action { display: grid; width: 38px; height: 38px; padding: 0; place-items: center; font-size: 19px; }
+.icon-action svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.request-actions { display: flex; justify-content: flex-end; }
 .collection-editor-list { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0; }
 .collection-editor-list button { flex: none; border: 0; border-radius: 999px; padding: 7px 10px; color: var(--ink); background: rgba(130,110,85,.09); cursor: pointer; }
 .collection-editor-list button.is-active { color: #fff; background: var(--accent); }
@@ -166,8 +179,8 @@ legend { margin-bottom: 9px; color: var(--muted); font-size: 12px; }
   .edit-dock { top: calc(var(--safe-top) + 57px); display: grid; }
   .floating-panel { top: calc(var(--safe-top) + 64px); }
   .editor-panel { left: var(--safe-left); right: var(--safe-right); top: auto; bottom: var(--safe-bottom); width: auto; max-height: min(76vh, 650px); border-radius: 19px; }
-  .details-panel { left: var(--safe-left); right: var(--safe-right); top: auto; width: auto; height: min(72vh, 640px); animation-name: sheet-in; }
-  @keyframes sheet-in { from { opacity: 0; transform: translateY(14px); } }
+  .details-panel { left: var(--safe-left); right: var(--safe-right); top: auto; width: auto; height: min(72vh, 640px); transform: translateY(14px); }
+  .details-panel.is-open { transform: translateY(0); }
   .place-popup .maplibregl-popup-content { min-width: min(240px, calc(100vw - 42px)); }
   .journal-panel { top: auto; width: 100%; height: min(58vh, 520px); border-radius: 20px 20px 0 0; }
   #app.is-journal #map { width: 100%; height: 48%; }

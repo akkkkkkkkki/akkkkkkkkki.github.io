@@ -29,7 +29,15 @@ export async function verifyInvite(key) {
 }
 
 export async function submitPlace(key, place) {
-  return apiRequest("/v1/submissions", { key, place });
+  return submitContribution(key, { type: "new_place", place });
+}
+
+export async function submitContribution(key, submission) {
+  return apiRequest("/v1/submissions", { key, submission });
+}
+
+export async function requestInvite(request) {
+  return apiRequest("/v1/key-requests", request);
 }
 
 async function loadAndValidate(url, init) {
