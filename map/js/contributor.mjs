@@ -3,7 +3,7 @@ import { hidePanel, panelIsOpen, showPanel } from "./panel-motion.mjs";
 
 const $ = (id) => document.getElementById(id);
 
-export function createContributor({ map, showToast, closeOtherPanels, reloadData }) {
+export function createContributor({ map, showToast, closeOtherPanels, reloadData, getMapId }) {
   let selecting = false;
   let marker = null;
   let accessLevel = null;
@@ -106,6 +106,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     if (!coordinates.every(Number.isFinite)) throw new Error("请先在地图上选择位置");
     return {
       type: "new_place",
+      mapId: getMapId(),
       place: {
         title: $("contribution-title").value,
         category: $("contribution-category").value,
@@ -121,6 +122,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     if (!targetPlace) throw new Error("目标地点不存在，请重新选择");
     return {
       type: "new_entry",
+      mapId: getMapId(),
       placeId: targetPlace.id,
       entry: {
         text: $("contribution-text").value,

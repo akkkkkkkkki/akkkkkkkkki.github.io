@@ -42,6 +42,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .corner-home { left: var(--safe-left); border-radius: 13px; }
 .tool-dock { right: var(--safe-right); display: flex; gap: 3px; padding: 5px; border-radius: 16px; }
+.map-switch-wrap { position: fixed; z-index: 42; right: var(--safe-right); bottom: var(--safe-bottom); display: grid; justify-items: end; gap: 7px; }
+.map-switch-button { position: relative; border-radius: 13px; color: var(--ink); background: var(--paper); box-shadow: var(--shadow); }
+.map-switch-button svg { width: 20px; height: 20px; }
+.map-switch-menu { display: grid; gap: 4px; width: 92px; padding: 5px; border: 1px solid var(--line); border-radius: 13px; background: color-mix(in srgb, var(--paper) 94%, transparent); box-shadow: var(--shadow); transform-origin: right bottom; animation: switch-menu-in .16s ease both; backdrop-filter: blur(12px); }
+.map-switch-menu[hidden] { display: none; }
+.map-switch-option { border: 0; border-radius: 9px; padding: 8px 10px; color: var(--ink); background: transparent; text-align: left; font-size: 12px; transition: background .14s ease, color .14s ease, transform .14s ease; }
+.map-switch-option:hover { background: rgba(120, 100, 76, .11); }
+.map-switch-option:active { transform: scale(.96); }
+.map-switch-option.is-active { color: #fff; background: var(--accent); }
+#map { transition: opacity .18s ease, width .19s ease, right .19s ease; }
+#map.is-switching { opacity: .38; }
+@keyframes switch-menu-in { from { opacity: 0; transform: translateY(5px) scale(.96); } to { opacity: 1; transform: none; } }
 .edit-dock { left: var(--safe-left); top: calc(var(--safe-top) + 49px); display: flex; gap: 3px; padding: 5px; border-radius: 16px; }
 .button-dot { position: absolute; width: 7px; height: 7px; right: 3px; top: 3px; border-radius: 50%; background: #d77a4e; border: 1px solid var(--paper); }
 .error-dot { background: #b5332c; }

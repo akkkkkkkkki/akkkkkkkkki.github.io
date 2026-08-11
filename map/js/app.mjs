@@ -3,12 +3,14 @@ import { loadMapData } from "./api-client.mjs";
 import { createContributor } from "./contributor.mjs";
 import { createMapStyle } from "./map-style.mjs";
 import { hidePanel, panelIsOpen, showPanel } from "./panel-motion.mjs";
+import { MAPS, mapIdFromLocation, normalizeMapId, urlForMap } from "./maps.mjs";
 
 const $ = (id) => document.getElementById(id);
 const state = {
   data: { version: 2, places: [], collections: [] }, errors: [],
   categories: new Set(["food", "walk"]), tags: new Set(), activeCollectionId: null,
-  selectedId: null, theme: safePreference("map-theme", "warm"), view: safePreference("map-view", "map")
+  selectedId: null, theme: safePreference("map-theme", "warm"), view: safePreference("map-view", "map"),
+  mapId: mapIdFromLocation(), switching: false
 };
 let map;
 let popup;
@@ -22,23 +24,24 @@ async function boot() {
     throw new Error("地图运行库没有正确加载");
   }
 
-  const result = await loadMapData();
+  const result = await loadMapData(state.mapId);
   state.data = result.data;
   state.errors = result.errors;
 
   const protocol = new pmtiles.Protocol();
   maplibregl.addProtocol("pmtiles", protocol.tile);
-  const tileUrl = new URL("tiles/shanghai.pmtiles", location.href).href;
+  const config = MAPS[state.mapId];
+  const tileUrl = new URL(config.tile, location.href).href;
 
   applyTheme(false);
   map = new maplibregl.Map({
     container: "map",
     style: createMapStyle(state.theme, tileUrl),
-    center: readMapPosition()?.center || [121.4737, 31.2304],
-    zoom: readMapPosition()?.zoom || 10.7,
-    minZoom: 8.5,
+    center: readMapPosition()?.center || config.center,
+    zoom: readMapPosition()?.zoom || config.zoom,
+    minZoom: config.minZoom,
     maxZoom: 18,
-    maxBounds: [[120.65, 30.55], [122.25, 31.95]],
+    maxBounds: config.bounds,
     attributionControl: false,
     localIdeographFontFamily: "'PingFang SC', 'Microsoft YaHei', sans-serif"
   });
@@ -55,9 +58,11 @@ async function boot() {
     map,
     showToast,
     closeOtherPanels: () => { closePanels(); closeDetails(); },
-    reloadData
+    reloadData,
+    getMapId: () => state.mapId
   });
   renderAll();
+  renderMapSwitch();
   setView(state.view, false);
 
   $("loading").hidden = true;
@@ -132,7 +137,12 @@ function bindUI() {
     state.theme = state.theme === "warm" ? "night" : "warm";
     applyTheme();
     map.once("style.load", () => { addBusinessLayers(); renderAll(); });
-    map.setStyle(createMapStyle(state.theme, new URL("tiles/shanghai.pmtiles", location.href).href));
+    map.setStyle(createMapStyle(state.theme, tileUrlFor(state.mapId)));
+  });
+  $("map-switch-button").addEventListener("click", () => {
+    const menu = $("map-switch-menu");
+    menu.hidden = !menu.hidden;
+    $("map-switch-button").setAttribute("aria-expanded", String(!menu.hidden));
   });
   bindPanelButton("filter-button", "filter-panel");
   bindPanelButton("collection-button", "collections-panel");
@@ -151,8 +161,69 @@ function bindUI() {
   }));
   $("retry-button").addEventListener("click", () => location.reload());
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") { closeDetails(); closePanels(); }
+    if (event.key === "Escape") { closeDetails(); closePanels(); closeMapSwitch(); }
   });
+  addEventListener("popstate", () => switchMap(mapIdFromLocation(), { updateUrl: false }));
+}
+
+function renderMapSwitch() {
+  const menu = $("map-switch-menu");
+  menu.replaceChildren();
+  Object.values(MAPS).forEach((config) => {
+    const button = document.createElement("button");
+    button.className = `map-switch-option${config.id === state.mapId ? " is-active" : ""}`;
+    button.type = "button";
+    button.textContent = config.label;
+    button.setAttribute("aria-current", config.id === state.mapId ? "true" : "false");
+    button.addEventListener("click", () => switchMap(config.id));
+    menu.append(button);
+  });
+  $("map").setAttribute("aria-label", `${MAPS[state.mapId].label}地点地图`);
+}
+
+function closeMapSwitch() {
+  $("map-switch-menu").hidden = true;
+  $("map-switch-button").setAttribute("aria-expanded", "false");
+}
+
+async function switchMap(nextId, { updateUrl = true } = {}) {
+  nextId = normalizeMapId(nextId);
+  closeMapSwitch();
+  if (nextId === state.mapId || state.switching) return;
+  state.switching = true;
+  writeMapPosition();
+  $("map").classList.add("is-switching");
+  try {
+    const result = await loadMapData(nextId);
+    state.mapId = nextId;
+    state.categories = new Set(["food", "walk"]);
+    state.tags.clear();
+    state.activeCollectionId = null;
+    state.selectedId = null;
+    closeDetails();
+    closePanels();
+    const config = MAPS[nextId];
+    map.setMinZoom(config.minZoom);
+    map.setMaxBounds(config.bounds);
+    const loaded = once(map, "style.load");
+    map.setStyle(createMapStyle(state.theme, tileUrlFor(nextId)));
+    await loaded;
+    addBusinessLayers();
+    const saved = readMapPosition();
+    map.jumpTo({ center: saved?.center || config.center, zoom: saved?.zoom || config.zoom });
+    replaceData(result.data, result.errors);
+    renderMapSwitch();
+    if (updateUrl) history.pushState({ city: nextId }, "", urlForMap(nextId));
+  } catch (error) {
+    showToast(error.message || "地图切换失败");
+  } finally {
+    state.switching = false;
+    $("map").classList.remove("is-switching");
+  }
+}
+
+function tileUrlFor(mapId) {
+  return new URL(MAPS[mapId].tile, location.href).href;
 }
 
 function bindPanelButton(buttonId, panelId) {
@@ -360,7 +431,7 @@ function replaceData(data, errors) {
 }
 
 async function reloadData() {
-  const result = await loadMapData();
+  const result = await loadMapData(state.mapId);
   replaceData(result.data, result.errors);
 }
 
@@ -383,10 +454,10 @@ function safePreference(key, fallback) {
 }
 function safeSet(key, value) { try { localStorage.setItem(key, value); } catch {} }
 function readMapPosition() {
-  try { const value = JSON.parse(localStorage.getItem("map-position")); return value?.center?.length === 2 && Number.isFinite(value.zoom) ? value : null; } catch { return null; }
+  try { const value = JSON.parse(localStorage.getItem(`map-position:${state.mapId}`)); return value?.center?.length === 2 && Number.isFinite(value.zoom) ? value : null; } catch { return null; }
 }
 function writeMapPosition() {
   if (!map) return;
-  const center = map.getCenter(); safeSet("map-position", JSON.stringify({ center: [center.lng, center.lat], zoom: map.getZoom() }));
+  const center = map.getCenter(); safeSet(`map-position:${state.mapId}`, JSON.stringify({ center: [center.lng, center.lat], zoom: map.getZoom() }));
 }
 function reducedMotion() { return matchMedia("(prefers-reduced-motion: reduce)").matches; }

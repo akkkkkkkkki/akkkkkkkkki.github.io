@@ -8,14 +8,15 @@ export function contributionEnabled() {
   return Boolean(apiBase);
 }
 
-export async function loadMapData() {
-  const fallbackPromise = loadAndValidate("data/map-data.json", { cache: "no-store" });
+export async function loadMapData(mapId = "shanghai") {
+  const fallbackPath = mapId === "beijing" ? "data/map-data-beijing.json" : "data/map-data.json";
+  const fallbackPromise = loadAndValidate(fallbackPath, { cache: "no-store" });
   if (!apiBase) return { ...(await fallbackPromise), source: "static" };
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 2200);
   try {
-    const result = await loadAndValidate(`${apiBase}/v1/map`, { signal: controller.signal });
+    const result = await loadAndValidate(`${apiBase}/v1/map?city=${encodeURIComponent(mapId)}`, { signal: controller.signal });
     if (!result.data.places.length && result.errors.length) throw new Error("云端地点数据不完整");
     return { ...result, source: "cloud" };
   } catch (error) {
