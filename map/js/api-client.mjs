@@ -1,6 +1,8 @@
 import { validateData } from "./data-store.mjs";
 
 const apiBase = String(globalThis.WALKING_MAP_CONFIG?.apiBase || "").replace(/\/$/, "");
+const API_TIMEOUT_MS = 5000;
+const NETWORK_ERROR_MESSAGE = "网络连接失败，请切换网络或开启代理后重试";
 
 export function contributionEnabled() {
   return Boolean(apiBase);
@@ -48,11 +50,25 @@ async function loadAndValidate(url, init) {
 
 async function apiRequest(path, body) {
   if (!apiBase) throw new Error("投稿入口还没有启用");
-  const response = await fetch(`${apiBase}${path}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body)
-  });
+  return postJson(`${apiBase}${path}`, body);
+}
+
+export async function postJson(url, body, { fetchImpl = fetch, timeoutMs = API_TIMEOUT_MS } = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let response;
+  try {
+    response = await fetchImpl(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    });
+  } catch {
+    throw new Error(NETWORK_ERROR_MESSAGE);
+  } finally {
+    clearTimeout(timer);
+  }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error?.message || "提交失败，请稍后重试");
   return data;
