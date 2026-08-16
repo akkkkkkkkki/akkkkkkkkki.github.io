@@ -61,7 +61,9 @@ export async function cancelMobileDraft(token) {
 }
 
 export async function submitMobileDraft(token, payload) {
-  return apiRequest(`/v1/mobile-drafts/${encodeURIComponent(token)}/submit`, payload, { timeoutMs: MOBILE_SUBMIT_TIMEOUT_MS });
+  const form = new FormData();
+  form.append("payload", JSON.stringify(payload));
+  return apiFetch(`/v1/mobile-drafts/${encodeURIComponent(token)}/submit`, { method: "POST", body: form }, MOBILE_SUBMIT_TIMEOUT_MS);
 }
 
 export async function searchPlaces(mapId, keywords, center) {
