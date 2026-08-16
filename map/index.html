@@ -95,17 +95,22 @@
       <div id="contribution-fields" hidden>
         <form id="contribution-form">
           <p class="contribution-mode" id="contribution-mode"></p>
-          <div id="new-place-fields">
-            <label>名称<input id="contribution-title" maxlength="80"></label>
-            <label>分类<select id="contribution-category"><option value="food">吃喝</option><option value="walk">散步</option></select></label>
-            <label>标签<input id="contribution-tags" maxlength="300" placeholder="咖啡，安静，梧桐"></label>
-          </div>
           <input id="contribution-lng" type="hidden"><input id="contribution-lat" type="hidden">
           <input id="contribution-place-id" type="hidden">
-          <div class="location-picker" id="location-picker"><span id="location-summary">尚未选择位置</span><button type="button" class="soft-button icon-action" id="choose-location-button" aria-label="在地图上选点" title="在地图上选点"><svg aria-hidden="true"><use href="#icon-pin-plus"></use></svg></button></div>
-          <label>日期（可选）<input id="contribution-date" type="date"></label>
-          <label>文字<textarea id="contribution-text" rows="7" required maxlength="5000"></textarea></label>
-          <div class="form-actions contribute-actions"><button type="submit" class="primary-button icon-action" id="submit-contribution-button" aria-label="提交" title="提交">✓</button></div>
+          <div class="location-picker" id="location-picker"><span id="location-summary">尚未选择位置</span><div class="location-actions"><button type="button" class="soft-button icon-action" id="create-mobile-draft-button" aria-label="扫码填写" title="扫码填写" hidden><svg aria-hidden="true"><use href="#icon-qr"></use></svg></button><button type="button" class="soft-button icon-action" id="choose-location-button" aria-label="在地图上选点" title="在地图上选点"><svg aria-hidden="true"><use href="#icon-pin-plus"></use></svg></button></div></div>
+          <div id="contribution-content-fields" hidden>
+            <div id="new-place-fields">
+              <label>名称<input id="contribution-title" maxlength="80"></label>
+              <label>分类<select id="contribution-category"><option value="food">吃喝</option><option value="walk">散步</option></select></label>
+              <label>标签<input id="contribution-tags" maxlength="300" placeholder="咖啡，安静，梧桐"></label>
+            </div>
+            <label>日期（可选）<input id="contribution-date" type="date"></label>
+            <label>文字<textarea id="contribution-text" rows="7" required maxlength="5000"></textarea></label>
+            <label>照片（可选，最多 4 张）<input id="contribution-photo-input" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple></label>
+            <div id="contribution-photo-list" class="contribution-photo-list"></div>
+            <div class="form-actions contribute-actions"><button type="submit" class="primary-button icon-action" id="submit-contribution-button" aria-label="提交" title="提交">✓</button></div>
+          </div>
+          <div class="mobile-draft-box" id="mobile-draft-box" hidden><canvas id="mobile-draft-qr"></canvas><p id="mobile-draft-status">手机扫码填写</p><small id="mobile-draft-expiry"></small><a id="mobile-draft-link" target="_blank" rel="noreferrer">Open</a></div>
         </form>
       </div>
     </aside>
@@ -124,6 +129,7 @@
     <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20 15.3A8.4 8.4 0 0 1 8.7 4 8.5 8.5 0 1 0 20 15.3Z"/></symbol>
     <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
     <symbol id="icon-pin-plus" viewBox="0 0 24 24"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><path d="M12 7v6M9 10h6"/></symbol>
+    <symbol id="icon-qr" viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v6h-6v-2h4zM14 10v2M10 14h2"/></symbol>
     <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
     <symbol id="icon-edit" viewBox="0 0 24 24"><path d="m4 20 4.3-1 10.8-10.8a2 2 0 0 0-2.8-2.8L5.5 16.2 4 20Z"/></symbol>
     <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M12 16V4m0 0L7 9m5-5 5 5M5 20h14"/></symbol>
@@ -132,6 +138,7 @@
   <script src="vendor/maplibre-gl.js"></script>
   <script src="vendor/pmtiles.js"></script>
   <script src="vendor/basemaps.js"></script>
+  <script src="vendor/qrcode-generator.js"></script>
   <script src="config.js"></script>
   <script type="module" src="js/app.mjs"></script>
 </body>

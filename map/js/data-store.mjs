@@ -19,8 +19,8 @@ function cleanTags(tags) {
 
 function validPhoto(photo) {
   return photo && typeof photo === "object" &&
-    typeof photo.src === "string" && /^media\/(?!.*\.\.)(?!\/)/.test(photo.src) &&
-    typeof photo.alt === "string" && photo.alt.trim().length > 0;
+    ((typeof photo.id === "string" && /^photo_[a-f0-9]{8,32}$/.test(photo.id)) ||
+      (typeof photo.src === "string" && /^media\/(?!.*\.\.)(?!\/)/.test(photo.src) && typeof photo.alt === "string" && photo.alt.trim().length > 0));
 }
 
 export function validateData(raw) {
@@ -69,7 +69,7 @@ export function validateData(raw) {
       coordinates: [place.coordinates[0], place.coordinates[1]],
       entries,
       text: entries.at(-1).text,
-      photos: photos.map((photo) => ({ src: photo.src, alt: photo.alt.trim() }))
+      photos: photos.map(normalizePhoto)
     });
   }
 
@@ -136,6 +136,11 @@ function normalizeEntries(place, path, errors) {
       return;
     }
     ids.add(entry.id);
+    const entryPhotos = entry.photos == null ? [] : entry.photos;
+    if (!Array.isArray(entryPhotos) || entryPhotos.length > 4 || entryPhotos.some((photo) => !validPhoto(photo))) {
+      errors.push(issue(entryPath, "访问记录照片格式不正确或超过 4 张"));
+      return;
+    }
     entries.push({
       id: entry.id,
       text: entry.text.trim(),
@@ -143,11 +148,17 @@ function normalizeEntries(place, path, errors) {
       contributorName: typeof entry.contributorName === "string" && entry.contributorName.trim().length <= 40
         ? entry.contributorName.trim() || null
         : null,
+      photos: entryPhotos.map(normalizePhoto),
       ...(typeof entry.createdAt === "string" ? { createdAt: entry.createdAt } : {}),
       ...(typeof entry.updatedAt === "string" ? { updatedAt: entry.updatedAt } : {})
     });
   });
   return entries;
+}
+
+function normalizePhoto(photo) {
+  if (photo.id) return { id: photo.id, width: Number(photo.width) || null, height: Number(photo.height) || null };
+  return { src: photo.src, alt: photo.alt.trim() };
 }
 
 export function filterPlaces(places, filters = {}) {

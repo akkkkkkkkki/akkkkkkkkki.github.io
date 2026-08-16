@@ -43,6 +43,42 @@ export async function requestInvite(request) {
   return apiRequest("/v1/key-requests", request);
 }
 
+export async function createMobileDraft(key, setup) {
+  return apiRequest("/v1/mobile-drafts", { key, setup });
+}
+
+export async function getMobileDraft(token) {
+  return apiGet(`/v1/mobile-drafts/${encodeURIComponent(token)}`);
+}
+
+export async function submitMobileDraft(token, payload) {
+  return apiRequest(`/v1/mobile-drafts/${encodeURIComponent(token)}/submit`, payload);
+}
+
+export async function searchPlaces(mapId, keywords, center) {
+  return apiRequest("/v1/geo/search", { mapId, keywords, center });
+}
+
+export async function reverseLocation(mapId, coordinates) {
+  return apiRequest("/v1/geo/reverse", { mapId, coordinates });
+}
+
+export async function uploadDraftPhoto(token, formData) {
+  return apiFetch(`/v1/mobile-drafts/${encodeURIComponent(token)}/photos`, { method: "POST", body: formData }, 20_000);
+}
+
+export async function deleteDraftPhoto(token, photoId) {
+  return apiFetch(`/v1/mobile-drafts/${encodeURIComponent(token)}/photos/${encodeURIComponent(photoId)}`, { method: "DELETE" });
+}
+
+export function draftPhotoUrl(token, photoId, thumbnail = false) {
+  return `${apiBase}/v1/mobile-drafts/${encodeURIComponent(token)}/photos/${encodeURIComponent(photoId)}${thumbnail ? "/thumb" : ""}`;
+}
+
+export function publicPhotoUrl(photo, thumbnail = false) {
+  return `${apiBase}/v1/photos/${encodeURIComponent(photo.id)}${thumbnail ? "/thumb" : ""}`;
+}
+
 async function loadAndValidate(url, init) {
   const response = await fetch(url, init);
   if (!response.ok) throw new Error(`地点数据加载失败（${response.status}）`);
@@ -52,6 +88,25 @@ async function loadAndValidate(url, init) {
 async function apiRequest(path, body) {
   if (!apiBase) throw new Error("投稿入口还没有启用");
   return postJson(`${apiBase}${path}`, body);
+}
+
+async function apiGet(path) {
+  return apiFetch(path, { method: "GET" });
+}
+
+async function apiFetch(path, init, timeoutMs = API_TIMEOUT_MS) {
+  if (!apiBase) throw new Error("投稿入口还没有启用");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(`${apiBase}${path}`, { ...init, signal: controller.signal });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error?.message || "请求失败，请稍后重试");
+    return data;
+  } catch (error) {
+    if (error instanceof Error && error.message && error.message !== "Failed to fetch" && error.name !== "AbortError") throw error;
+    throw new Error(NETWORK_ERROR_MESSAGE);
+  } finally { clearTimeout(timer); }
 }
 
 export async function postJson(url, body, { fetchImpl = fetch, timeoutMs = API_TIMEOUT_MS } = {}) {

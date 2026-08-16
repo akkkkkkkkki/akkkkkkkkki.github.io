@@ -4,6 +4,7 @@ import { createContributor } from "./contributor.mjs";
 import { createMapStyle } from "./map-style.mjs";
 import { hidePanel, panelIsOpen, showPanel } from "./panel-motion.mjs";
 import { MAPS, mapIdFromLocation, normalizeMapId, urlForMap } from "./maps.mjs";
+import { publicPhotoUrl } from "./api-client.mjs";
 
 const $ = (id) => document.getElementById(id);
 const state = {
@@ -372,6 +373,18 @@ function openDetails(place) {
     if (entry.contributorName) {
       const from = document.createElement("p"); from.className = "visit-entry-from"; from.textContent = `from: ${entry.contributorName}`;
       wrap.append(from);
+    }
+    if (entry.photos?.length) {
+      const grid = document.createElement("div"); grid.className = "entry-photo-grid";
+      entry.photos.forEach((photo) => {
+        const image = document.createElement("img");
+        image.src = photo.id ? publicPhotoUrl(photo, true) : photo.src;
+        image.alt = photo.alt || `${place.title} 的照片`;
+        image.loading = "lazy";
+        image.addEventListener("click", () => { if (photo.id) image.src = publicPhotoUrl(photo); });
+        grid.append(image);
+      });
+      wrap.append(grid);
     }
     entries.append(wrap);
   });

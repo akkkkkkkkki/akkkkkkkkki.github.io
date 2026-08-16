@@ -1,5 +1,7 @@
-import { contributionEnabled, requestInvite, submitContribution, verifyInvite } from "./api-client.mjs";
+import { contributionEnabled, createMobileDraft, deleteDraftPhoto, draftPhotoUrl, getMobileDraft, requestInvite, submitContribution, submitMobileDraft, uploadDraftPhoto, verifyInvite } from "./api-client.mjs";
 import { hidePanel, panelIsOpen, showPanel } from "./panel-motion.mjs";
+import { photoForm, processPhoto } from "./photo-processing.mjs";
+import { drawQr } from "./qr.mjs";
 
 const $ = (id) => document.getElementById(id);
 
@@ -10,6 +12,11 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
   let displayName = null;
   let mode = "new_place";
   let targetPlace = null;
+  let draftPoll = null;
+  let draftToken = null;
+  let draftExpiresAt = null;
+  let draftUrl = null;
+  let photos = [];
   const panel = $("contribute-panel");
 
   $("contribute-button").addEventListener("click", () => {
@@ -64,6 +71,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
       $("contribution-fields").hidden = false;
       const permission = accessLevel === "trusted" ? "直接发布" : "等待审核";
       $("invite-status").textContent = displayName ? `${displayName} · ${permission}` : permission;
+      updateContentVisibility();
       (mode === "new_entry" ? $("contribution-text") : $("choose-location-button")).focus();
     } catch (error) {
       accessLevel = null;
@@ -87,8 +95,11 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     const button = $("submit-contribution-button");
     setBusy(button, true);
     try {
+      if (photos.some((photo) => photo.uploading)) throw new Error("请等待照片上传完成");
       const submission = mode === "new_entry" ? buildEntrySubmission() : buildPlaceSubmission();
-      const result = await submitContribution($("invite-key").value.trim(), submission);
+      const result = draftToken
+        ? await submitMobileDraft(draftToken, submission.type === "new_entry" ? { entry: submission.entry } : { place: submission.place })
+        : await submitContribution($("invite-key").value.trim(), submission);
       const published = result.status === "published";
       showToast(published ? "已发布" : "已提交，等待审核");
       resetForm();
@@ -134,6 +145,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
   function handleMapClick(lngLat) {
     if (!selecting) return false;
     selecting = false;
+    invalidateDraft();
     $("contribute-button").classList.remove("is-active");
     $("contribution-lng").value = lngLat.lng.toFixed(6);
     $("contribution-lat").value = lngLat.lat.toFixed(6);
@@ -141,6 +153,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     marker = new maplibregl.Marker({ color: "#A25F45" }).setLngLat(lngLat).addTo(map);
     $("location-summary").textContent = `${lngLat.lng.toFixed(5)}, ${lngLat.lat.toFixed(5)}`;
     showPanel(panel);
+    updateContentVisibility();
     $("contribution-title").focus();
     return true;
   }
@@ -155,6 +168,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
   }
 
   function setMode(nextMode, place = null) {
+    if (mode !== nextMode || targetPlace?.id !== place?.id) invalidateDraft();
     mode = nextMode;
     targetPlace = place;
     const newPlace = mode === "new_place";
@@ -163,6 +177,92 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     $("contribution-title").required = newPlace;
     $("contribution-place-id").value = place?.id || "";
     $("contribution-mode").textContent = newPlace ? "New place" : `Add to · ${place.title}`;
+    updateContentVisibility();
+  }
+
+  $("create-mobile-draft-button").addEventListener("click", async () => {
+    const button = $("create-mobile-draft-button"); setBusy(button, true);
+    try {
+      const result = await ensureDraft();
+      await renderQr(result.url, result.expiresAt); pollDraft(result.token);
+    } catch (error) { showToast(error.message); } finally { setBusy(button, false); }
+  });
+
+  $("contribution-photo-input").addEventListener("change", async (event) => {
+    const files = [...event.target.files]; event.target.value = "";
+    if (photos.length + files.length > 4) return showToast("每条记录最多 4 张照片");
+    try {
+      const draft = await ensureDraft();
+      for (const file of files) {
+        const position = nextPhotoPosition();
+        const local = { id: `local-${crypto.randomUUID()}`, position, localUrl: URL.createObjectURL(file), uploading: true };
+        photos.push(local); renderPhotos();
+        try {
+          const result = await uploadDraftPhoto(draft.token, photoForm(await processPhoto(file), position));
+          Object.assign(local, result.photo, { uploading: false });
+        } catch (error) {
+          URL.revokeObjectURL(local.localUrl); photos = photos.filter((photo) => photo !== local); showToast(error.message);
+        }
+        renderPhotos();
+      }
+    } catch (error) { showToast(error.message); }
+  });
+
+  async function ensureDraft() {
+    if (draftToken && draftExpiresAt > Date.now()) return { token: draftToken, expiresAt: new Date(draftExpiresAt).toISOString(), url: draftUrl };
+    const setup = mode === "new_entry"
+      ? { type: "new_entry", mapId: getMapId(), placeId: targetPlace.id }
+      : { type: "new_place", mapId: getMapId(), coordinates: [Number($("contribution-lng").value), Number($("contribution-lat").value)] };
+    const result = await createMobileDraft($("invite-key").value.trim(), setup);
+    draftToken = result.token; draftExpiresAt = new Date(result.expiresAt).getTime(); draftUrl = result.url;
+    return result;
+  }
+
+  function renderPhotos() {
+    const box = $("contribution-photo-list"); box.replaceChildren();
+    photos.sort((a, b) => a.position - b.position).forEach((photo) => {
+      const wrap = document.createElement("div"); wrap.className = `contribution-photo${photo.uploading ? " is-uploading" : ""}`;
+      const image = document.createElement("img"); image.src = photo.localUrl || draftPhotoUrl(draftToken, photo.id, true); image.alt = "待提交照片";
+      const remove = document.createElement("button"); remove.type = "button"; remove.textContent = "×"; remove.disabled = photo.uploading;
+      remove.addEventListener("click", async () => { try { if (!photo.id.startsWith("local-")) await deleteDraftPhoto(draftToken, photo.id); if (photo.localUrl) URL.revokeObjectURL(photo.localUrl); photos = photos.filter((item) => item !== photo); renderPhotos(); } catch (error) { showToast(error.message); } });
+      wrap.append(image, remove); box.append(wrap);
+    });
+  }
+
+  function nextPhotoPosition() { const used = new Set(photos.map((photo) => photo.position)); for (let i = 0; i < 4; i += 1) if (!used.has(i)) return i; return 4; }
+
+  function invalidateDraft() {
+    clearInterval(draftPoll); draftPoll = null; draftToken = null; draftExpiresAt = null; draftUrl = null;
+    photos.forEach((photo) => { if (photo.localUrl) URL.revokeObjectURL(photo.localUrl); }); photos = []; renderPhotos();
+    $("mobile-draft-box").hidden = true; $("mobile-draft-box").classList.remove("is-complete");
+  }
+
+  function updateContentVisibility() {
+    const ready = Boolean(accessLevel) && (mode === "new_entry" || Boolean($("contribution-lng").value));
+    $("contribution-content-fields").hidden = !ready;
+    $("create-mobile-draft-button").hidden = !ready;
+  }
+
+  async function renderQr(url, expiresAt) {
+    const box = $("mobile-draft-box"); box.hidden = false; $("mobile-draft-link").href = url;
+    $("mobile-draft-expiry").textContent = `有效至 ${new Date(expiresAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    const canvas = $("mobile-draft-qr");
+    drawQr(canvas, url);
+  }
+
+  function pollDraft(token) {
+    clearInterval(draftPoll);
+    draftPoll = setInterval(async () => {
+      try {
+        const result = await getMobileDraft(token);
+        if (result.draft.status === "submitted") {
+          clearInterval(draftPoll); draftPoll = null;
+          $("mobile-draft-box").classList.add("is-complete"); $("mobile-draft-status").textContent = "✓ 已完成";
+          $("submit-contribution-button").disabled = true;
+          await reloadData();
+        }
+      } catch {}
+    }, 4000);
   }
 
   function restoreKey() {
@@ -176,10 +276,12 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     $("contribution-lat").value = "";
     $("contribution-place-id").value = "";
     $("location-summary").textContent = "尚未选择位置";
+    invalidateDraft();
     marker?.remove();
     marker = null;
     targetPlace = null;
     setMode("new_place");
+    updateContentVisibility();
   }
 
   function closeKeyRequest() {
@@ -190,6 +292,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
 
   function close() {
     selecting = false;
+    clearInterval(draftPoll); draftPoll = null;
     $("contribute-button").classList.remove("is-active");
     hidePanel(panel);
     closeKeyRequest();

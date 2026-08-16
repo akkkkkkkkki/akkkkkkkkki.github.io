@@ -124,6 +124,8 @@ legend { margin-bottom: 9px; color: var(--muted); font-size: 12px; }
 .visit-entry-date { margin: 0 0 7px; color: var(--muted); font-size: 10px; }
 .visit-entry-text { margin: 0; white-space: pre-wrap; line-height: 1.85; font-size: 14px; }
 .visit-entry-from { margin: 7px 0 0; color: color-mix(in srgb, var(--muted) 72%, transparent); font-size: 9px; letter-spacing: .02em; }
+.entry-photo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin-top: 11px; }
+.entry-photo-grid img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; background: #e5ded2; cursor: zoom-in; }
 .details-add-entry { display: grid; width: 34px; height: 34px; margin: 18px 0 0 auto; place-items: center; border: 0; border-radius: 11px; color: #fff; background: var(--accent); cursor: pointer; font-size: 20px; transition: transform .16s ease, opacity .16s ease; }
 .details-add-entry:hover { transform: translateY(-1px); }
 .details-add-entry:active { transform: scale(.94); }
@@ -151,6 +153,21 @@ legend { margin-bottom: 9px; color: var(--muted); font-size: 12px; }
 .form-actions { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 7px; margin-top: 16px; }
 .contribute-actions { display: flex; justify-content: flex-end; }
 .compact-actions, .location-picker { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin-top: 10px; }
+.location-actions { display: flex; gap: 6px; }
+#contribution-content-fields { display: grid; animation: contribution-fields-in .2s ease both; }
+.contribution-photo-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+.contribution-photo { position: relative; overflow: hidden; border-radius: 9px; background: #e5ded2; }
+.contribution-photo img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+.contribution-photo button { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border: 0; border-radius: 7px; color: white; background: rgba(45,37,32,.72); }
+.contribution-photo.is-uploading { opacity: .5; }
+@keyframes contribution-fields-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+.mobile-draft-box { display: grid; justify-items: center; gap: 5px; margin-top: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,.42); text-align: center; }
+.mobile-draft-box canvas { width: 180px; height: 180px; border-radius: 8px; }
+.mobile-draft-box p { margin: 2px 0 0; font-size: 11px; }
+.mobile-draft-box small { color: var(--muted); font-size: 9px; }
+.mobile-draft-box a { color: var(--muted); font-size: 10px; }
+.mobile-draft-box.is-complete canvas { display: none; }
+.mobile-draft-box.is-complete { color: #fff; background: var(--accent); }
 .compact-actions .field-help { margin: 0; }
 .apply-key-button { margin-top: 10px; padding: 3px 0; }
 .contribution-mode { margin: 12px 0 2px; color: var(--muted); font-size: 10px; letter-spacing: .03em; }
