@@ -1,4 +1,4 @@
-import { deleteDraftPhoto, draftPhotoUrl, getMobileDraft, markMobileDraftOpened, reverseLocation, searchPlaces, submitMobileDraft, uploadDraftPhoto } from "../js/api-client.mjs";
+import { deleteDraftPhoto, draftPhotoUrl, getMobileDraft, isNetworkError, markMobileDraftOpened, reverseLocation, searchPlaces, submitMobileDraft, uploadDraftPhoto } from "../js/api-client.mjs";
 import { MAPS } from "../js/maps.mjs";
 import { createMapStyle } from "../js/map-style.mjs";
 import { photoForm, processPhoto } from "../js/photo-processing.mjs";
@@ -136,9 +136,25 @@ async function onSubmit(event) {
     if (draft.type === "new_place" && !insideMap(coordinates)) throw new Error("请先选择当前地图范围内的位置");
     const entry = { text: $("mobile-text").value, visitedOn: $("mobile-date").value || null };
     const payload = draft.type === "new_entry" ? { entry } : { place: { title: $("mobile-title").value, category: $("mobile-category").value, tags: $("mobile-tags").value.split(/[，,]/).map((v)=>v.trim()).filter(Boolean), coordinates, text: entry.text, visitedOn: entry.visitedOn } };
-    const result = await submitMobileDraft(token, payload); localStorage.removeItem(storageKey());
-    showComplete(result.status === "published" ? "已发布" : "已提交", result.status === "published" ? "这条记录已经出现在地图上。" : "投稿已进入待审核。");
-  } catch (error) { showToast(error.message); button.disabled = false; }
+    const result = await submitMobileDraft(token, payload);
+    finishSubmission(result.status === "published");
+  } catch (error) {
+    if (isNetworkError(error)) {
+      try {
+        const current = await getMobileDraft(token);
+        if (current.draft.status === "submitted") return finishSubmission(Boolean(current.draft.result?.entryId));
+      } catch {}
+      showToast("连接不稳定，内容仍保留，请再次提交");
+    } else {
+      showToast(error.message);
+    }
+    button.disabled = false;
+  }
+}
+
+function finishSubmission(published) {
+  localStorage.removeItem(storageKey());
+  showComplete(published ? "已发布" : "已提交", published ? "这条记录已经出现在地图上。" : "投稿已进入待审核。");
 }
 
 function saveLocal() { try { localStorage.setItem(storageKey(), JSON.stringify({ coordinates, title: $("mobile-title").value, category: $("mobile-category").value, tags: $("mobile-tags").value, date: $("mobile-date").value, text: $("mobile-text").value })); } catch {} }

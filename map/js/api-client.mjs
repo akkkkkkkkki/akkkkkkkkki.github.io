@@ -2,6 +2,7 @@ import { validateData } from "./data-store.mjs";
 
 const apiBase = String(globalThis.WALKING_MAP_CONFIG?.apiBase || "").replace(/\/$/, "");
 const API_TIMEOUT_MS = 5000;
+const MOBILE_SUBMIT_TIMEOUT_MS = 20_000;
 const NETWORK_ERROR_MESSAGE = "网络连接失败，请切换网络或开启代理后重试";
 
 export function contributionEnabled() {
@@ -60,11 +61,16 @@ export async function cancelMobileDraft(token) {
 }
 
 export async function submitMobileDraft(token, payload) {
-  return apiRequest(`/v1/mobile-drafts/${encodeURIComponent(token)}/submit`, payload);
+  return apiRequest(`/v1/mobile-drafts/${encodeURIComponent(token)}/submit`, payload, { timeoutMs: MOBILE_SUBMIT_TIMEOUT_MS });
 }
 
 export async function searchPlaces(mapId, keywords, center) {
-  return apiRequest("/v1/geo/search", { mapId, keywords, center });
+  try {
+    return await apiRequest("/v1/geo/search", { mapId, keywords, center });
+  } catch (error) {
+    if (isNetworkError(error)) throw new Error("地点搜索连接失败，请稍后重试");
+    throw error;
+  }
 }
 
 export async function reverseLocation(mapId, coordinates) {
@@ -93,9 +99,9 @@ async function loadAndValidate(url, init) {
   return validateData(await response.json());
 }
 
-async function apiRequest(path, body) {
+async function apiRequest(path, body, options) {
   if (!apiBase) throw new Error("投稿入口还没有启用");
-  return postJson(`${apiBase}${path}`, body);
+  return postJson(`${apiBase}${path}`, body, options);
 }
 
 async function apiGet(path) {
@@ -113,7 +119,7 @@ async function apiFetch(path, init, timeoutMs = API_TIMEOUT_MS) {
     return data;
   } catch (error) {
     if (error instanceof Error && error.message && error.message !== "Failed to fetch" && error.name !== "AbortError") throw error;
-    throw new Error(NETWORK_ERROR_MESSAGE);
+    throw networkError();
   } finally { clearTimeout(timer); }
 }
 
@@ -129,11 +135,21 @@ export async function postJson(url, body, { fetchImpl = fetch, timeoutMs = API_T
       signal: controller.signal
     });
   } catch {
-    throw new Error(NETWORK_ERROR_MESSAGE);
+    throw networkError();
   } finally {
     clearTimeout(timer);
   }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error?.message || "提交失败，请稍后重试");
   return data;
+}
+
+export function isNetworkError(error) {
+  return error?.code === "NETWORK_ERROR";
+}
+
+function networkError() {
+  const error = new Error(NETWORK_ERROR_MESSAGE);
+  error.code = "NETWORK_ERROR";
+  return error;
 }
