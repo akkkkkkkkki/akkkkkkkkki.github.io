@@ -1,1 +1,66 @@
 :root{--paper:#f8f3ea;--paper-solid:#fffaf1;--ink:#403a33;--muted:#81786d;--border:#d9d0c3;--accent:#365c50;--shadow:0 12px 34px rgba(54,45,35,.14);font-family:Inter,"PingFang SC",system-ui,sans-serif;color:var(--ink);background:#e8e2d6}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -20%,#fffaf2 0,#e8e2d6 55%)}button,input,select,textarea{font:inherit}.mobile-shell{width:min(560px,100%);min-height:100vh;margin:auto;padding:max(18px,env(safe-area-inset-top)) 14px max(22px,env(safe-area-inset-bottom))}.mobile-header{display:flex;align-items:baseline;justify-content:space-between;padding:5px 4px 17px}.mobile-header h1{margin:0;font:600 22px ui-serif,"Songti SC",serif}.mobile-header span{color:var(--muted);font-size:11px;letter-spacing:.06em}.mobile-card{padding:18px;border:1px solid rgba(255,255,255,.58);border-radius:20px;background:rgba(255,250,241,.93);box-shadow:var(--shadow);backdrop-filter:blur(16px)}#mobile-loading,#mobile-error,#mobile-complete{text-align:center}.mobile-form{display:grid;gap:13px}.mobile-form label{display:grid;gap:6px;color:var(--muted);font-size:11px}.mobile-form input,.mobile-form select,.mobile-form textarea{width:100%;border:1px solid var(--border);border-radius:10px;padding:10px;color:var(--ink);background:rgba(255,255,255,.72)}.mobile-form textarea{resize:vertical;line-height:1.55}.mobile-location,.mobile-photos{padding:12px;border:1px solid var(--border);border-radius:14px;background:rgba(130,110,85,.045)}.mobile-label-row{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:11px}.location-value{margin:8px 0 0;font-size:12px;line-height:1.5}.location-methods{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:11px}.location-methods button{display:grid;justify-items:center;gap:4px;border:0;border-radius:11px;padding:9px 4px;color:var(--muted);background:rgba(130,110,85,.09);font-size:10px}.location-methods svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.location-methods button.is-active{color:#fff;background:var(--accent)}.location-search{display:flex;gap:7px;margin-top:9px}.location-search input{min-width:0}.search-results{display:grid;gap:5px;max-height:220px;overflow:auto;margin-top:8px}.search-result{border:0;border-radius:10px;padding:9px 10px;color:var(--ink);background:rgba(255,255,255,.72);text-align:left}.search-result strong,.search-result small{display:block}.search-result small{margin-top:3px;color:var(--muted);font-size:9px}.mobile-mini-map{height:230px;margin-top:9px;overflow:hidden;border-radius:12px}.photo-add{display:grid!important;width:30px;height:30px;margin:0!important;place-items:center;border-radius:9px;color:#fff!important;background:var(--accent);font-size:18px!important;cursor:pointer}.photo-preview-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:9px}.photo-preview{position:relative;overflow:hidden;border-radius:11px;background:#e5ded2}.photo-preview img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}.photo-preview button{position:absolute;right:5px;top:5px;width:25px;height:25px;border:0;border-radius:8px;color:#fff;background:rgba(30,30,27,.72)}.photo-preview.is-uploading:after{content:"uploading…";position:absolute;inset:auto 5px 5px;padding:4px 6px;border-radius:7px;color:#fff;background:rgba(30,30,27,.72);font-size:8px}.mobile-submit{display:flex;justify-content:flex-end}.complete-mark{display:grid;width:46px;height:46px;margin:5px auto 13px;place-items:center;border-radius:50%;color:#fff;background:var(--accent);font-size:22px}#mobile-complete h2,#mobile-error h2{font:600 20px ui-serif,"Songti SC",serif}.loader{margin:auto}.text-button{border:0;color:var(--muted);background:transparent;font-size:10px}.primary-button,.soft-button{border:0;border-radius:10px;padding:9px 12px}.primary-button{color:#fff;background:var(--accent)}.soft-button{color:var(--ink);background:rgba(130,110,85,.1)}.icon-action{display:grid;width:38px;height:38px;padding:0;place-items:center;font-size:19px}.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 8px);transform:translateX(-50%);z-index:20;padding:9px 13px;border-radius:11px;color:#fff;background:rgba(39,49,46,.92);font-size:11px;box-shadow:var(--shadow)}.svg-defs{position:absolute;width:0;height:0;overflow:hidden}[hidden]{display:none!important}
+
+/* The shared map stylesheet intentionally locks the desktop map viewport.
+   Restore a native document scroller for the dedicated phone form. */
+html {
+  width: 100%;
+  height: auto;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  width: 100%;
+  height: auto;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: visible;
+  touch-action: pan-y;
+}
+
+.mobile-shell {
+  width: min(480px, 100%);
+  min-height: 100dvh;
+  padding-bottom: calc(18px + env(safe-area-inset-bottom));
+}
+
+.mobile-form { gap: 15px; padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
+.mobile-form label, .mobile-label-row { font-size: 12px; }
+.mobile-form input, .mobile-form select, .mobile-form textarea {
+  min-height: 44px;
+  padding: 11px 12px;
+  font-size: 16px;
+}
+.mobile-form textarea { min-height: 132px; }
+.location-value { font-size: 14px; }
+.location-methods button { min-height: 52px; font-size: 12px; touch-action: manipulation; }
+.mobile-mini-map { touch-action: none; }
+
+.mobile-submit {
+  position: fixed;
+  z-index: 15;
+  left: 50%;
+  bottom: 0;
+  width: min(480px, 100%);
+  margin: 0;
+  padding: 10px max(18px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  transform: translateX(-50%);
+  border-top: 1px solid rgba(86,73,57,.12);
+  background: color-mix(in srgb, var(--paper-solid) 91%, transparent);
+  box-shadow: 0 -8px 20px rgba(54,45,35,.07);
+  backdrop-filter: blur(14px);
+}
+.mobile-submit .icon-action { width: 44px; height: 44px; border-radius: 13px; }
+
+@media (max-width: 600px) {
+  body { background: var(--paper); }
+  .mobile-shell { padding: max(14px, env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom)); }
+  .mobile-header { padding: 4px 5px 14px; }
+  .mobile-header h1 { font-size: 21px; }
+  .mobile-card { padding: 16px; border-radius: 18px; box-shadow: 0 8px 24px rgba(54,45,35,.1); backdrop-filter: none; }
+  .mobile-location, .mobile-photos { padding: 11px; }
+  .mobile-submit { padding-right: max(16px, env(safe-area-inset-right)); padding-left: max(16px, env(safe-area-inset-left)); }
+}
