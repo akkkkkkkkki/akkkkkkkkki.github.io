@@ -69,14 +69,16 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
       displayName = result.displayName;
       try { sessionStorage.setItem("walking-map-invite", key); } catch {}
       $("contribution-fields").hidden = false;
+      $("show-key-request-button").hidden = true;
       const permission = accessLevel === "trusted" ? "直接发布" : "等待审核";
       $("invite-status").textContent = displayName ? `${displayName} · ${permission}` : permission;
-      updateContentVisibility();
+      updateContentVisibility({ scroll: true });
       (mode === "new_entry" ? $("contribution-text") : $("choose-location-button")).focus();
     } catch (error) {
       accessLevel = null;
       displayName = null;
       $("contribution-fields").hidden = true;
+      $("show-key-request-button").hidden = false;
       $("invite-status").textContent = error.message;
     } finally {
       setBusy(button, false);
@@ -153,7 +155,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     marker = new maplibregl.Marker({ color: "#A25F45" }).setLngLat(lngLat).addTo(map);
     $("location-summary").textContent = `${lngLat.lng.toFixed(5)}, ${lngLat.lat.toFixed(5)}`;
     showPanel(panel);
-    updateContentVisibility();
+    updateContentVisibility({ scroll: true });
     $("contribution-title").focus();
     return true;
   }
@@ -237,17 +239,35 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     $("mobile-draft-box").hidden = true; $("mobile-draft-box").classList.remove("is-complete");
   }
 
-  function updateContentVisibility() {
+  function updateContentVisibility({ scroll = false } = {}) {
     const ready = Boolean(accessLevel) && (mode === "new_entry" || Boolean($("contribution-lng").value));
-    $("contribution-content-fields").hidden = !ready;
+    const fields = $("contribution-content-fields");
+    const wasHidden = fields.hidden;
+    fields.hidden = !ready;
     $("create-mobile-draft-button").hidden = !ready;
+    if (ready && wasHidden && scroll) scrollPanelTo(fields);
   }
 
   async function renderQr(url, expiresAt) {
-    const box = $("mobile-draft-box"); box.hidden = false; $("mobile-draft-link").href = url;
-    $("mobile-draft-expiry").textContent = `有效至 ${new Date(expiresAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    const box = $("mobile-draft-box");
     const canvas = $("mobile-draft-qr");
-    drawQr(canvas, url);
+    box.hidden = true;
+    try { drawQr(canvas, url); }
+    catch (error) { throw new Error(error?.message || "二维码生成失败，请使用 Open 链接"); }
+    $("mobile-draft-link").href = url;
+    $("mobile-draft-status").textContent = "手机扫码填写";
+    $("mobile-draft-expiry").textContent = `有效至 ${new Date(expiresAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    box.classList.remove("is-complete"); box.hidden = false;
+    scrollPanelTo(box);
+  }
+
+  function scrollPanelTo(element) {
+    requestAnimationFrame(() => {
+      const panelRect = panel.getBoundingClientRect(), elementRect = element.getBoundingClientRect();
+      const top = Math.max(0, panel.scrollTop + elementRect.top - panelRect.top - 14);
+      const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      panel.scrollTo({ top, behavior: reduced ? "auto" : "smooth" });
+    });
   }
 
   function pollDraft(token) {
@@ -287,7 +307,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
   function closeKeyRequest() {
     $("key-request-form").hidden = true;
     $("invite-form").hidden = false;
-    $("show-key-request-button").hidden = false;
+    $("show-key-request-button").hidden = Boolean(accessLevel);
   }
 
   function close() {
