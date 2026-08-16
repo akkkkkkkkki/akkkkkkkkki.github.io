@@ -1,4 +1,4 @@
-import { deleteDraftPhoto, draftPhotoUrl, getMobileDraft, isNetworkError, markMobileDraftOpened, reverseLocation, searchPlaces, submitMobileDraft, uploadDraftPhoto } from "../js/api-client.mjs";
+import { deleteDraftPhoto, draftPhotoUrl, getMobileDraft, isNetworkError, markMobileDraftOpened, reverseLocation, searchPlaces, submitMobileDraft, uploadDraftPhoto } from "../js/api-client.mjs?v=20260817-1";
 import { MAPS } from "../js/maps.mjs";
 import { createMapStyle } from "../js/map-style.mjs";
 import { photoForm, processPhoto } from "../js/photo-processing.mjs";

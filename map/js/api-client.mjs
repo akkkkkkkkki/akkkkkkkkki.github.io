@@ -130,7 +130,9 @@ export async function postJson(url, body, { fetchImpl = fetch, timeoutMs = API_T
   try {
     response = await fetchImpl(url, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      // text/plain keeps the JSON body but makes this a CORS simple request,
+      // avoiding a fragile OPTIONS round trip to the public Worker.
+      headers: { "content-type": "text/plain;charset=UTF-8" },
       body: JSON.stringify(body),
       signal: controller.signal
     });
