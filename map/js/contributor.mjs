@@ -1,4 +1,4 @@
-import { contributionEnabled, createMobileDraft, deleteDraftPhoto, draftPhotoUrl, getMobileDraft, requestInvite, submitContribution, submitMobileDraft, uploadDraftPhoto, verifyInvite } from "./api-client.mjs";
+import { cancelMobileDraft, contributionEnabled, createMobileDraft, deleteDraftPhoto, draftPhotoUrl, getMobileDraft, requestInvite, submitContribution, submitMobileDraft, uploadDraftPhoto, verifyInvite } from "./api-client.mjs";
 import { hidePanel, panelIsOpen, showPanel } from "./panel-motion.mjs";
 import { photoForm, processPhoto } from "./photo-processing.mjs";
 import { drawQr } from "./qr.mjs";
@@ -17,15 +17,22 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
   let draftExpiresAt = null;
   let draftUrl = null;
   let photos = [];
+  let mobileHandoff = false;
   const panel = $("contribute-panel");
 
   $("contribute-button").addEventListener("click", () => {
     if (!contributionEnabled()) return showToast("投稿入口还没有启用");
     if (panelIsOpen(panel)) return close();
     closeOtherPanels();
+    if (mobileHandoff) {
+      showPanel(panel);
+      if (draftToken) pollDraft(draftToken);
+      return;
+    }
     setMode("new_place");
     restoreKey();
     showPanel(panel);
+    if (draftToken) pollDraft(draftToken);
   });
   $("contribute-close").addEventListener("click", close);
 
@@ -70,8 +77,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
       try { sessionStorage.setItem("walking-map-invite", key); } catch {}
       $("contribution-fields").hidden = false;
       $("show-key-request-button").hidden = true;
-      const permission = accessLevel === "trusted" ? "直接发布" : "等待审核";
-      $("invite-status").textContent = displayName ? `${displayName} · ${permission}` : permission;
+      $("invite-status").textContent = displayName ? `${displayName} · Verified` : "Verified";
       updateContentVisibility({ scroll: true });
       (mode === "new_entry" ? $("contribution-text") : $("choose-location-button")).focus();
     } catch (error) {
@@ -112,6 +118,16 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     } finally {
       setBusy(button, false);
     }
+  });
+
+  $("choose-contribution-photo-button").addEventListener("click", () => $("contribution-photo-input").click());
+  $("cancel-mobile-draft-button").addEventListener("click", async () => {
+    const button = $("cancel-mobile-draft-button"); setBusy(button, true);
+    try {
+      await cancelMobileDraft(draftToken);
+      invalidateDraft(); setMobileHandoff(false); showToast("已取消手机填写");
+    } catch (error) { showToast(error.message); }
+    finally { setBusy(button, false); }
   });
 
   function buildPlaceSubmission() {
@@ -166,6 +182,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     setMode("new_entry", place);
     restoreKey();
     showPanel(panel);
+    if (draftToken) pollDraft(draftToken);
     ($("invite-key").value ? $("verify-key-button") : $("invite-key")).focus();
   }
 
@@ -229,6 +246,8 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
       remove.addEventListener("click", async () => { try { if (!photo.id.startsWith("local-")) await deleteDraftPhoto(draftToken, photo.id); if (photo.localUrl) URL.revokeObjectURL(photo.localUrl); photos = photos.filter((item) => item !== photo); renderPhotos(); } catch (error) { showToast(error.message); } });
       wrap.append(image, remove); box.append(wrap);
     });
+    $("contribution-photo-count").textContent = `${photos.length}/4`;
+    $("choose-contribution-photo-button").disabled = photos.length >= 4;
   }
 
   function nextPhotoPosition() { const used = new Set(photos.map((photo) => photo.position)); for (let i = 0; i < 4; i += 1) if (!used.has(i)) return i; return 4; }
@@ -237,10 +256,13 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     clearInterval(draftPoll); draftPoll = null; draftToken = null; draftExpiresAt = null; draftUrl = null;
     photos.forEach((photo) => { if (photo.localUrl) URL.revokeObjectURL(photo.localUrl); }); photos = []; renderPhotos();
     $("mobile-draft-box").hidden = true; $("mobile-draft-box").classList.remove("is-complete");
+    $("mobile-handoff").classList.remove("is-complete");
+    $("mobile-handoff-status").textContent = "手机填写中…";
+    $("cancel-mobile-draft-button").hidden = false;
   }
 
   function updateContentVisibility({ scroll = false } = {}) {
-    const ready = Boolean(accessLevel) && (mode === "new_entry" || Boolean($("contribution-lng").value));
+    const ready = !mobileHandoff && Boolean(accessLevel) && (mode === "new_entry" || Boolean($("contribution-lng").value));
     const fields = $("contribution-content-fields");
     const wasHidden = fields.hidden;
     fields.hidden = !ready;
@@ -272,17 +294,46 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
 
   function pollDraft(token) {
     clearInterval(draftPoll);
-    draftPoll = setInterval(async () => {
+    const checkDraft = async () => {
       try {
         const result = await getMobileDraft(token);
+        if (token !== draftToken) return;
+        if (result.draft.status === "cancelled") {
+          invalidateDraft();
+          setMobileHandoff(false);
+          showToast("手机填写已取消");
+          return;
+        }
+        if (result.draft.openedAt && !mobileHandoff) setMobileHandoff(true);
         if (result.draft.status === "submitted") {
           clearInterval(draftPoll); draftPoll = null;
-          $("mobile-draft-box").classList.add("is-complete"); $("mobile-draft-status").textContent = "✓ 已完成";
-          $("submit-contribution-button").disabled = true;
+          setMobileHandoff(true, { complete: true });
           await reloadData();
         }
       } catch {}
-    }, 4000);
+    };
+    draftPoll = setInterval(checkDraft, 4000);
+    void checkDraft();
+  }
+
+  function setMobileHandoff(active, { complete = false } = {}) {
+    mobileHandoff = active;
+    $("mobile-handoff").hidden = !active;
+    $("invite-form").hidden = active;
+    $("key-request-form").hidden = true;
+    $("show-key-request-button").hidden = active || Boolean(accessLevel);
+    $("contribution-fields").hidden = active || !accessLevel;
+    $("mobile-draft-box").hidden = true;
+    if (active) {
+      $("mobile-handoff").classList.toggle("is-complete", complete);
+      $("mobile-handoff-status").textContent = complete ? "✓ 已完成" : "手机填写中…";
+      $("cancel-mobile-draft-button").hidden = complete;
+      if (panelIsOpen(panel)) scrollPanelTo($("mobile-handoff"));
+    } else {
+      $("mobile-handoff").classList.remove("is-complete");
+      $("cancel-mobile-draft-button").hidden = false;
+      updateContentVisibility({ scroll: true });
+    }
   }
 
   function restoreKey() {
@@ -297,6 +348,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     $("contribution-place-id").value = "";
     $("location-summary").textContent = "尚未选择位置";
     invalidateDraft();
+    setMobileHandoff(false);
     marker?.remove();
     marker = null;
     targetPlace = null;
@@ -306,13 +358,13 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
 
   function closeKeyRequest() {
     $("key-request-form").hidden = true;
-    $("invite-form").hidden = false;
-    $("show-key-request-button").hidden = Boolean(accessLevel);
+    $("invite-form").hidden = mobileHandoff;
+    $("show-key-request-button").hidden = mobileHandoff || Boolean(accessLevel);
   }
 
   function close() {
     selecting = false;
-    clearInterval(draftPoll); draftPoll = null;
+    if (!mobileHandoff) { clearInterval(draftPoll); draftPoll = null; }
     $("contribute-button").classList.remove("is-active");
     hidePanel(panel);
     closeKeyRequest();

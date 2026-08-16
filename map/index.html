@@ -92,6 +92,7 @@
         <label>申请说明（可选）<textarea id="key-request-note" rows="4" maxlength="500"></textarea></label>
         <div class="form-actions request-actions"><button type="button" class="soft-button" id="cancel-key-request-button">Cancel</button><button type="submit" class="primary-button icon-action" id="submit-key-request-button" aria-label="提交申请" title="提交申请">✓</button></div>
       </form>
+      <div class="mobile-handoff" id="mobile-handoff" hidden><span id="mobile-handoff-status">手机填写中…</span><button type="button" id="cancel-mobile-draft-button" aria-label="取消手机填写" title="取消手机填写">×</button></div>
       <div id="contribution-fields" hidden>
         <form id="contribution-form">
           <p class="contribution-mode" id="contribution-mode"></p>
@@ -106,7 +107,7 @@
             </div>
             <label>日期（可选）<input id="contribution-date" type="date"></label>
             <label>文字<textarea id="contribution-text" rows="7" required maxlength="5000"></textarea></label>
-            <label>照片（可选，最多 4 张）<input id="contribution-photo-input" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple></label>
+            <div class="photo-picker-row"><button type="button" class="soft-button icon-action photo-picker-button" id="choose-contribution-photo-button" aria-label="选择照片" title="选择照片"><svg aria-hidden="true"><use href="#icon-image"></use></svg></button><span id="contribution-photo-count">0/4</span><input id="contribution-photo-input" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple hidden></div>
             <div id="contribution-photo-list" class="contribution-photo-list"></div>
             <div class="form-actions contribute-actions"><button type="submit" class="primary-button icon-action" id="submit-contribution-button" aria-label="提交" title="提交">✓</button></div>
           </div>
@@ -130,6 +131,7 @@
     <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
     <symbol id="icon-pin-plus" viewBox="0 0 24 24"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><path d="M12 7v6M9 10h6"/></symbol>
     <symbol id="icon-qr" viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v6h-6v-2h4zM14 10v2M10 14h2"/></symbol>
+    <symbol id="icon-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m4 17 4.5-4.5 3.5 3 2.5-2.5L20 18"/></symbol>
     <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
     <symbol id="icon-edit" viewBox="0 0 24 24"><path d="m4 20 4.3-1 10.8-10.8a2 2 0 0 0-2.8-2.8L5.5 16.2 4 20Z"/></symbol>
     <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M12 16V4m0 0L7 9m5-5 5 5M5 20h14"/></symbol>

@@ -160,6 +160,13 @@ legend { margin-bottom: 9px; color: var(--muted); font-size: 12px; }
 .contribution-photo img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
 .contribution-photo button { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border: 0; border-radius: 7px; color: white; background: rgba(45,37,32,.72); }
 .contribution-photo.is-uploading { opacity: .5; }
+.photo-picker-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.photo-picker-row>span { color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.photo-picker-button:disabled { cursor: default; }
+.mobile-handoff { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding: 12px 13px; border: 1px solid var(--border); border-radius: 13px; color: var(--muted); background: rgba(255,255,255,.42); font-size: 11px; animation: contribution-fields-in .2s ease both; }
+.mobile-handoff button { width: 27px; height: 27px; flex: none; border: 0; border-radius: 8px; color: var(--muted); background: rgba(130,110,85,.1); font-size: 17px; cursor: pointer; }
+.mobile-handoff.is-complete { color: #fff; background: var(--accent); }
+.mobile-handoff.is-complete button { display: none; }
 @keyframes contribution-fields-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
 .mobile-draft-box { display: grid; justify-items: center; gap: 5px; margin-top: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,.42); text-align: center; }
 .mobile-draft-box canvas { width: 180px; height: 180px; border-radius: 8px; }

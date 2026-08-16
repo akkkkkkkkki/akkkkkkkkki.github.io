@@ -1,4 +1,4 @@
-import { deleteDraftPhoto, draftPhotoUrl, getMobileDraft, reverseLocation, searchPlaces, submitMobileDraft, uploadDraftPhoto } from "../js/api-client.mjs";
+import { deleteDraftPhoto, draftPhotoUrl, getMobileDraft, markMobileDraftOpened, reverseLocation, searchPlaces, submitMobileDraft, uploadDraftPhoto } from "../js/api-client.mjs";
 import { MAPS } from "../js/maps.mjs";
 import { createMapStyle } from "../js/map-style.mjs";
 import { photoForm, processPhoto } from "../js/photo-processing.mjs";
@@ -19,7 +19,9 @@ async function boot() {
   const result = await getMobileDraft(token);
   draft = result.draft;
   if (draft.status === "submitted") return showComplete(draft.result?.entryId ? "已发布" : "已提交", draft.result?.entryId ? "这条记录已经出现在地图上。" : "投稿已进入待审核。");
+  if (draft.status === "cancelled") throw new Error("这次填写已经结束");
   if (draft.status === "expired") throw new Error("链接已过期，请在电脑上重新生成");
+  await markMobileDraftOpened(token);
   coordinates = draft.coordinates;
   photos = draft.photos || [];
   $("mobile-loading").hidden = true; $("mobile-form").hidden = false;

@@ -51,6 +51,14 @@ export async function getMobileDraft(token) {
   return apiGet(`/v1/mobile-drafts/${encodeURIComponent(token)}`);
 }
 
+export async function markMobileDraftOpened(token) {
+  return apiRequest(`/v1/mobile-drafts/${encodeURIComponent(token)}/opened`, {});
+}
+
+export async function cancelMobileDraft(token) {
+  return apiFetch(`/v1/mobile-drafts/${encodeURIComponent(token)}`, { method: "DELETE" });
+}
+
 export async function submitMobileDraft(token, payload) {
   return apiRequest(`/v1/mobile-drafts/${encodeURIComponent(token)}/submit`, payload);
 }
