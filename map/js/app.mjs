@@ -1,6 +1,7 @@
 import { buildCollectionLines, filterPlaces, getTagStats, toGeoJSON } from "./data-store.mjs";
-import { loadMapData } from "./api-client.mjs";
+import { loadCloudMapData, loadMapData } from "./api-client.mjs";
 import { createContributor } from "./contributor.mjs";
+import { createDataRefreshGate } from "./data-refresh.mjs";
 import { createMapStyle } from "./map-style.mjs";
 import { hidePanel, panelIsOpen, showPanel } from "./panel-motion.mjs";
 import { MAPS, mapIdFromLocation, normalizeMapId, urlForMap } from "./maps.mjs";
@@ -17,6 +18,7 @@ let map;
 let popup;
 let contributor;
 let toastTimer;
+const cloudRefresh = createDataRefreshGate(() => state.mapId);
 
 boot().catch(showFatal);
 
@@ -67,6 +69,7 @@ async function boot() {
   setView(state.view, false);
 
   $("loading").hidden = true;
+  refreshFromCloud(state.mapId);
 }
 
 function once(target, eventName) {
@@ -192,6 +195,7 @@ async function switchMap(nextId, { updateUrl = true } = {}) {
   closeMapSwitch();
   if (nextId === state.mapId || state.switching) return;
   state.switching = true;
+  cloudRefresh.invalidate();
   writeMapPosition();
   $("map").classList.add("is-switching");
   try {
@@ -215,6 +219,7 @@ async function switchMap(nextId, { updateUrl = true } = {}) {
     replaceData(result.data, result.errors);
     renderMapSwitch();
     if (updateUrl) history.pushState({ city: nextId }, "", urlForMap(nextId));
+    refreshFromCloud(nextId);
   } catch (error) {
     showToast(error.message || "地图切换失败");
   } finally {
@@ -446,6 +451,26 @@ function replaceData(data, errors) {
 async function reloadData() {
   const result = await loadMapData(state.mapId);
   replaceData(result.data, result.errors);
+  refreshFromCloud(state.mapId);
+}
+
+async function refreshFromCloud(mapId) {
+  const isCurrent = cloudRefresh.begin(mapId);
+  try {
+    const result = await loadCloudMapData(mapId);
+    if (!result || !isCurrent()) return;
+    refreshData(result.data, result.errors);
+  } catch (error) {
+    if (isCurrent()) console.warn("Walking Map API unavailable; keeping static data", error);
+  }
+}
+
+function refreshData(data, errors) {
+  const selectedId = state.selectedId;
+  state.data = data;
+  state.errors = errors;
+  renderAll();
+  if (selectedId && state.data.places.some((place) => place.id === selectedId)) selectPlace(selectedId);
 }
 
 function showToast(message) {

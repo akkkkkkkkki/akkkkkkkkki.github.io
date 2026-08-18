@@ -2,6 +2,7 @@ import { validateData } from "./data-store.mjs";
 
 const apiBase = String(globalThis.WALKING_MAP_CONFIG?.apiBase || "").replace(/\/$/, "");
 const API_TIMEOUT_MS = 5000;
+const MAP_REFRESH_TIMEOUT_MS = 10_000;
 const MOBILE_SUBMIT_TIMEOUT_MS = 20_000;
 const NETWORK_ERROR_MESSAGE = "网络连接失败，请切换网络或开启代理后重试";
 
@@ -9,20 +10,21 @@ export function contributionEnabled() {
   return Boolean(apiBase);
 }
 
-export async function loadMapData(mapId = "shanghai") {
+export async function loadMapData(mapId = "shanghai", { fetchImpl = fetch } = {}) {
   const fallbackPath = mapId === "beijing" ? "data/map-data-beijing.json" : "data/map-data.json";
-  const fallbackPromise = loadAndValidate(fallbackPath, { cache: "no-store" });
-  if (!apiBase) return { ...(await fallbackPromise), source: "static" };
+  return { ...(await loadAndValidate(fallbackPath, { cache: "no-store" }, fetchImpl)), source: "static" };
+}
 
+export async function loadCloudMapData(mapId = "shanghai", {
+  fetchImpl = fetch, timeoutMs = MAP_REFRESH_TIMEOUT_MS, baseUrl = apiBase
+} = {}) {
+  if (!baseUrl) return null;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 2200);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const result = await loadAndValidate(`${apiBase}/v1/map?city=${encodeURIComponent(mapId)}`, { signal: controller.signal });
+    const result = await loadAndValidate(`${baseUrl}/v1/map?city=${encodeURIComponent(mapId)}`, { signal: controller.signal }, fetchImpl);
     if (!result.data.places.length && result.errors.length) throw new Error("云端地点数据不完整");
     return { ...result, source: "cloud" };
-  } catch (error) {
-    console.warn("Walking Map API unavailable; using static data", error);
-    return { ...(await fallbackPromise), source: "static", fallbackReason: error };
   } finally {
     clearTimeout(timer);
   }
@@ -95,8 +97,8 @@ export function publicPhotoUrl(photo, thumbnail = false) {
   return `${apiBase}/v1/photos/${encodeURIComponent(photo.id)}${thumbnail ? "/thumb" : ""}`;
 }
 
-async function loadAndValidate(url, init) {
-  const response = await fetch(url, init);
+async function loadAndValidate(url, init, fetchImpl = fetch) {
+  const response = await fetchImpl(url, init);
   if (!response.ok) throw new Error(`地点数据加载失败（${response.status}）`);
   return validateData(await response.json());
 }
