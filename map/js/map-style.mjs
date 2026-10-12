@@ -95,7 +95,7 @@ function createFlavor(theme) {
     regular: "Noto Sans Regular",
     bold: "Noto Sans Regular",
     italic: "Noto Sans Regular",
-    pois: undefined,
+    pois: preset.pois ? { ...preset.pois } : undefined,
     landcover: preset.landcover ? { ...preset.landcover } : undefined
   };
 }
@@ -105,7 +105,31 @@ export function createMapStyle(theme, tileUrl) {
   const flavor = createFlavor(theme);
   const layers = globalThis.basemaps
     .layers("protomaps", flavor, { lang: "zh-Hans" })
-    .filter((layer) => !layer.layout?.["icon-image"]);
+    .filter((layer) => layer.id === "pois" || !layer.layout?.["icon-image"])
+    .map((layer) => {
+      if (layer.id !== "pois") return layer;
+
+      // Keep the bundled POI names without requiring an external icon sprite.
+      const { "icon-image": _icon, ...layout } = layer.layout;
+      return {
+        ...layer,
+        minzoom: 14,
+        layout: {
+          ...layout,
+          "text-size": ["interpolate", ["linear"], ["zoom"], 14, 10, 18, 12],
+          "text-offset": [0, 0],
+          "text-variable-anchor": ["center", "top", "bottom"],
+          "text-padding": 5
+        },
+        paint: {
+          ...layer.paint,
+          "text-color": flavor.address_label,
+          "text-halo-color": flavor.address_label_halo,
+          "text-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0, 15, 0.85],
+          "text-halo-width": 1.2
+        }
+      };
+    });
 
   return {
     version: 8,

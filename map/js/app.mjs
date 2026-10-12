@@ -2,7 +2,7 @@ import { buildCollectionLines, filterPlaces, getTagStats, toGeoJSON } from "./da
 import { loadCloudMapData, loadMapData } from "./api-client.mjs";
 import { createContributor } from "./contributor.mjs";
 import { createDataRefreshGate } from "./data-refresh.mjs";
-import { createMapStyle } from "./map-style.mjs";
+import { createMapStyle } from "./map-style.mjs?v=20261012-1";
 import { hidePanel, panelIsOpen, showPanel } from "./panel-motion.mjs";
 import { MAPS, mapIdFromLocation, normalizeMapId, urlForMap } from "./maps.mjs";
 import { publicPhotoUrl } from "./api-client.mjs";
