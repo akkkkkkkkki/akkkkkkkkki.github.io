@@ -1,6 +1,7 @@
 import { buildCollectionLines, filterPlaces, getTagStats, toGeoJSON } from "./data-store.mjs";
 import { loadCloudMapData, loadMapData } from "./api-client.mjs";
-import { createContributor } from "./contributor.mjs";
+import { createContributor } from "./contributor.mjs?v=20261015-1";
+import { poiSelection } from "./poi-selection.mjs";
 import { createDataRefreshGate } from "./data-refresh.mjs";
 import { createMapStyle } from "./map-style.mjs?v=20261012-1";
 import { hidePanel, panelIsOpen, showPanel } from "./panel-motion.mjs";
@@ -114,25 +115,47 @@ function addBusinessLayers() {
 }
 
 function bindMapEvents() {
-  map.on("click", "place-clusters", async (event) => {
-    const feature = event.features?.[0];
-    if (!feature) return;
-    const zoom = await map.getSource("places").getClusterExpansionZoom(feature.properties.cluster_id);
-    map.easeTo({ center: feature.geometry.coordinates, zoom, duration: reducedMotion() ? 0 : 520 });
-  });
-  ["place-points", "place-labels"].forEach((layer) => map.on("click", layer, (event) => {
-    const feature = event.features?.[0];
-    if (feature) selectPlace(feature.properties.id, true);
-  }));
-  ["place-clusters", "place-points", "place-labels"].forEach((layer) => {
+  const clickableLayers = ["place-clusters", "place-points", "place-labels", "pois"];
+  clickableLayers.forEach((layer) => {
     map.on("mouseenter", layer, () => { map.getCanvas().style.cursor = "pointer"; });
     map.on("mouseleave", layer, () => { map.getCanvas().style.cursor = ""; });
   });
-  map.on("click", (event) => {
-    if (contributor?.handleMapClick(event.lngLat)) return;
-    if (map.queryRenderedFeatures(event.point, { layers: ["place-clusters", "place-points", "place-labels"] }).length === 0) selectPlace(null);
+  map.on("click", async (event) => {
+    if (state.switching) return;
+    const features = map.queryRenderedFeatures(event.point, { layers: clickableLayers.filter((id) => map.getLayer(id)) });
+    const poi = features.filter((feature) => feature.layer.id === "pois").map(poiSelection).find(Boolean);
+    if (contributor?.handleMapClick(event.lngLat, poi)) { selectPlace(null); return; }
+    // A recorded place takes priority when its marker overlaps a basemap name.
+    const recorded = features.find((feature) => feature.layer.id !== "pois");
+    if (recorded?.layer.id === "place-clusters") {
+      const source = map.getSource("places");
+      try {
+        const zoom = await source.getClusterExpansionZoom(recorded.properties.cluster_id);
+        if (source === map.getSource("places")) map.easeTo({ center: recorded.geometry.coordinates, zoom, duration: reducedMotion() ? 0 : 520 });
+      } catch (error) { console.warn("Cluster expansion failed", error); }
+      return;
+    }
+    if (recorded) return selectPlace(recorded.properties.id, true);
+    selectPlace(null);
+    if (poi) showPoi(poi);
   });
   map.on("moveend", () => writeMapPosition());
+}
+
+function showPoi(poi) {
+  const content = document.createElement("div");
+  content.className = "poi-card";
+  const title = document.createElement("h3"); title.textContent = poi.title;
+  const add = document.createElement("button");
+  add.type = "button"; add.className = "soft-button icon-action";
+  add.textContent = "+"; add.title = "Add"; add.setAttribute("aria-label", `在${poi.title}新增地点`);
+  add.addEventListener("click", () => {
+    popup?.remove(); popup = null;
+    contributor?.openForPoi(poi);
+  });
+  content.append(title, add);
+  popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10, maxWidth: "240px", className: "place-popup" })
+    .setLngLat(poi.coordinates).setDOMContent(content).addTo(map);
 }
 
 function bindUI() {

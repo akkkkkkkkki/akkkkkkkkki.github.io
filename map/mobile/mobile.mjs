@@ -1,6 +1,7 @@
 import { deleteDraftPhoto, draftPhotoUrl, getMobileDraft, isNetworkError, markMobileDraftOpened, reverseLocation, searchPlaces, submitMobileDraft, uploadDraftPhoto } from "../js/api-client.mjs?v=20260817-2";
 import { MAPS } from "../js/maps.mjs";
-import { createMapStyle } from "../js/map-style.mjs";
+import { createMapStyle } from "../js/map-style.mjs?v=20261012-1";
+import { poiSelection, readDraftPrefill } from "../js/poi-selection.mjs";
 import { photoForm, processPhoto } from "../js/photo-processing.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -31,6 +32,9 @@ async function boot() {
     $("mobile-title").required = false;
     $("mobile-location-value").textContent = draft.placeTitle;
   } else {
+    const prefill = readDraftPrefill(location.hash);
+    $("mobile-title").value = prefill.title;
+    $("mobile-category").value = prefill.category;
     $("mobile-location-value").textContent = formatCoordinates(coordinates);
   }
   restoreLocal();
@@ -92,7 +96,18 @@ async function showManualMap() {
   miniMap = new maplibregl.Map({ container: "mobile-mini-map", style: createMapStyle("warm", new URL(`../${config.tile}`, location.href).href), center: coordinates || config.center, zoom: coordinates ? 15 : config.zoom, minZoom: config.minZoom, maxZoom: 18, maxBounds: config.bounds, attributionControl: false });
   marker = new maplibregl.Marker({ color: "#A25F45", draggable: true }).setLngLat(coordinates || config.center).addTo(miniMap);
   marker.on("dragend", () => updateManual(marker.getLngLat()));
-  miniMap.on("click", (event) => { marker.setLngLat(event.lngLat); updateManual(event.lngLat); });
+  miniMap.on("click", (event) => {
+    const poi = miniMap.getLayer("pois")
+      ? miniMap.queryRenderedFeatures(event.point, { layers: ["pois"] }).map(poiSelection).find(Boolean) : null;
+    if (poi && insideMap(poi.coordinates)) {
+      coordinates = poi.coordinates;
+      marker.setLngLat(coordinates);
+      $("mobile-title").value = poi.title;
+      $("mobile-category").value = poi.category;
+      $("mobile-location-value").textContent = poi.title;
+      saveLocal();
+    } else { marker.setLngLat(event.lngLat); updateManual(event.lngLat); }
+  });
 }
 
 async function updateManual(lngLat) {

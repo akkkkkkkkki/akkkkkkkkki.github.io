@@ -100,6 +100,9 @@ legend { margin-bottom: 9px; color: var(--muted); font-size: 12px; }
 .place-popup .maplibregl-popup-content { min-width: 210px; max-width: 240px; padding: 12px; border-radius: 14px; color: var(--ink); background: color-mix(in srgb, var(--paper-solid) 95%, transparent); box-shadow: var(--shadow); backdrop-filter: blur(12px); }
 .place-popup .maplibregl-popup-tip { border-top-color: var(--paper-solid) !important; }
 .place-card-button { width: 100%; padding: 0; border: 0; color: inherit; background: transparent; text-align: left; cursor: pointer; }
+.poi-card { display: flex; align-items: center; gap: 12px; }
+.poi-card h3 { flex: 1; margin: 0; overflow-wrap: anywhere; font: 600 14px/1.4 ui-serif, "Songti SC", serif; }
+.poi-card button { flex: none; }
 .place-card-button h3 { margin: 0 24px 7px 0; font: 600 14px/1.35 ui-serif, "Songti SC", serif; }
 .place-card-button p { display: -webkit-box; overflow: hidden; margin: 7px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .card-expand { position: absolute; right: 12px; top: 9px; font-size: 17px; color: var(--muted); }

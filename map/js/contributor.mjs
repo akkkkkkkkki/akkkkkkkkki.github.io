@@ -2,6 +2,7 @@ import { cancelMobileDraft, contributionEnabled, createMobileDraft, deleteDraftP
 import { hidePanel, panelIsOpen, showPanel } from "./panel-motion.mjs";
 import { photoForm, processPhoto } from "./photo-processing.mjs";
 import { drawQr } from "./qr.mjs";
+import { withDraftPrefill } from "./poi-selection.mjs";
 
 const $ = (id) => document.getElementById(id);
 
@@ -79,7 +80,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
       $("show-key-request-button").hidden = true;
       $("invite-status").textContent = displayName ? `${displayName} · Verified` : "Verified";
       updateContentVisibility({ scroll: true });
-      (mode === "new_entry" ? $("contribution-text") : $("choose-location-button")).focus();
+      (mode === "new_entry" || $("contribution-lng").value ? $("contribution-text") : $("choose-location-button")).focus();
     } catch (error) {
       accessLevel = null;
       displayName = null;
@@ -160,20 +161,48 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     };
   }
 
-  function handleMapClick(lngLat) {
+  function handleMapClick(lngLat, poi = null) {
     if (!selecting) return false;
     selecting = false;
     invalidateDraft();
     $("contribute-button").classList.remove("is-active");
+    setLocation(lngLat, poi);
+    showPanel(panel);
+    updateContentVisibility({ scroll: true });
+    (poi ? $("contribution-text") : $("contribution-title")).focus();
+    return true;
+  }
+
+  function setLocation(lngLat, poi = null) {
+    if (poi) {
+      lngLat = { lng: poi.coordinates[0], lat: poi.coordinates[1] };
+      $("contribution-title").value = poi.title;
+      $("contribution-category").value = poi.category;
+    }
     $("contribution-lng").value = lngLat.lng.toFixed(6);
     $("contribution-lat").value = lngLat.lat.toFixed(6);
     marker?.remove();
     marker = new maplibregl.Marker({ color: "#A25F45" }).setLngLat(lngLat).addTo(map);
-    $("location-summary").textContent = `${lngLat.lng.toFixed(5)}, ${lngLat.lat.toFixed(5)}`;
+    $("location-summary").textContent = poi?.title || `${lngLat.lng.toFixed(5)}, ${lngLat.lat.toFixed(5)}`;
+  }
+
+  function openForPoi(poi) {
+    if (!contributionEnabled()) return showToast("投稿入口还没有启用");
+    // Opening another shop must not discard text, uploaded images or a QR draft.
+    const hasDraft = draftToken || mobileHandoff || photos.length || ["contribution-text", "contribution-tags", "contribution-date"].some((id) => $(id).value.trim());
+    closeOtherPanels();
+    if (hasDraft) {
+      showPanel(panel);
+      if (draftToken) pollDraft(draftToken);
+      showToast("当前还有未完成的填写，请先完成；调整位置可使用选点按钮");
+      return;
+    }
+    resetForm();
+    setLocation(null, poi);
+    restoreKey();
     showPanel(panel);
     updateContentVisibility({ scroll: true });
-    $("contribution-title").focus();
-    return true;
+    (accessLevel ? $("contribution-text") : $("invite-key").value ? $("verify-key-button") : $("invite-key")).focus();
   }
 
   function openForPlace(place) {
@@ -228,13 +257,17 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
   });
 
   async function ensureDraft() {
-    if (draftToken && draftExpiresAt > Date.now()) return { token: draftToken, expiresAt: new Date(draftExpiresAt).toISOString(), url: draftUrl };
+    if (draftToken && draftExpiresAt > Date.now()) return { token: draftToken, expiresAt: new Date(draftExpiresAt).toISOString(), url: prefillDraftUrl(draftUrl) };
     const setup = mode === "new_entry"
       ? { type: "new_entry", mapId: getMapId(), placeId: targetPlace.id }
       : { type: "new_place", mapId: getMapId(), coordinates: [Number($("contribution-lng").value), Number($("contribution-lat").value)] };
     const result = await createMobileDraft($("invite-key").value.trim(), setup);
     draftToken = result.token; draftExpiresAt = new Date(result.expiresAt).getTime(); draftUrl = result.url;
-    return result;
+    return { ...result, url: prefillDraftUrl(result.url) };
+  }
+
+  function prefillDraftUrl(url) {
+    return mode === "new_place" ? withDraftPrefill(url, { title: $("contribution-title").value, category: $("contribution-category").value }) : url;
   }
 
   function renderPhotos() {
@@ -370,7 +403,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     closeKeyRequest();
   }
 
-  return { handleMapClick, openForPlace, close };
+  return { handleMapClick, openForPlace, openForPoi, close };
 }
 
 function setBusy(button, busy) {
