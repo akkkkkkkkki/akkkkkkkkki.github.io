@@ -1,4 +1,4 @@
-import { cancelMobileDraft, contributionEnabled, createMobileDraft, deleteDraftPhoto, draftPhotoUrl, getMobileDraft, requestInvite, submitContribution, submitMobileDraft, uploadDraftPhoto, verifyInvite } from "./api-client.mjs";
+import { cancelMobileDraft, contributionEnabled, createMobileDraft, deleteDraftPhoto, draftPhotoUrl, getMobileDraft, requestInvite, submitContribution, submitMobileDraft, updateDraftLocation, uploadDraftPhoto, verifyInvite } from "./api-client.mjs?v=20261015-2";
 import { hidePanel, panelIsOpen, showPanel } from "./panel-motion.mjs";
 import { photoForm, processPhoto } from "./photo-processing.mjs";
 import { drawQr } from "./qr.mjs";
@@ -6,7 +6,7 @@ import { withDraftPrefill } from "./poi-selection.mjs";
 
 const $ = (id) => document.getElementById(id);
 
-export function createContributor({ map, showToast, closeOtherPanels, reloadData, getMapId }) {
+export function createContributor({ map, showToast, closeOtherPanels, reloadData, getMapId, openLocationSearch }) {
   let selecting = false;
   let marker = null;
   let accessLevel = null;
@@ -19,6 +19,8 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
   let draftUrl = null;
   let photos = [];
   let mobileHandoff = false;
+  let locationBusy = false;
+  let autoTitle = "";
   const panel = $("contribute-panel");
 
   $("contribute-button").addEventListener("click", () => {
@@ -93,10 +95,14 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
   });
 
   $("choose-location-button").addEventListener("click", () => {
+    if (locationBusy) return;
     selecting = true;
     hidePanel(panel);
     $("contribute-button").classList.add("is-active");
     showToast("请在地图上点击地点的位置");
+  });
+  $("search-location-button").addEventListener("click", () => {
+    if (!locationBusy) openLocationSearch?.();
   });
 
   $("contribution-form").addEventListener("submit", async (event) => {
@@ -104,6 +110,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     const button = $("submit-contribution-button");
     setBusy(button, true);
     try {
+      if (locationBusy) throw new Error("正在更新位置，请稍候");
       if (photos.some((photo) => photo.uploading)) throw new Error("请等待照片上传完成");
       const submission = mode === "new_entry" ? buildEntrySubmission() : buildPlaceSubmission();
       const result = draftToken
@@ -164,20 +171,47 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
   function handleMapClick(lngLat, poi = null) {
     if (!selecting) return false;
     selecting = false;
-    invalidateDraft();
     $("contribute-button").classList.remove("is-active");
-    setLocation(lngLat, poi);
     showPanel(panel);
-    updateContentVisibility({ scroll: true });
-    (poi ? $("contribution-text") : $("contribution-title")).focus();
+    void changeLocation(lngLat, poi);
     return true;
+  }
+
+  async function changeLocation(lngLat, poi = null) {
+    if (locationBusy || mobileHandoff) return;
+    const token = draftToken, mapId = getMapId();
+    const coordinates = poi?.coordinates || [lngLat.lng, lngLat.lat];
+    locationBusy = true;
+    $("choose-location-button").disabled = $("search-location-button").disabled = true;
+    try {
+      if (token) await updateDraftLocation(token, coordinates);
+      if (token !== draftToken || mapId !== getMapId()) return;
+      setLocation(lngLat, poi);
+      // Any existing QR keeps the same server draft and all uploaded photos.
+      if (draftUrl && !$("mobile-draft-box").hidden) await renderQr(prefillDraftUrl(draftUrl), draftExpiresAt);
+      updateContentVisibility({ scroll: true });
+      (poi ? $("contribution-text") : $("contribution-title")).focus();
+    } catch (error) { showToast(error.message); }
+    finally {
+      locationBusy = false;
+      $("choose-location-button").disabled = $("search-location-button").disabled = false;
+    }
+  }
+
+  function selectSearchResult(poi) {
+    closeOtherPanels();
+    showPanel(panel);
+    return changeLocation(null, poi);
   }
 
   function setLocation(lngLat, poi = null) {
     if (poi) {
       lngLat = { lng: poi.coordinates[0], lat: poi.coordinates[1] };
-      $("contribution-title").value = poi.title;
-      $("contribution-category").value = poi.category;
+      if (!$("contribution-title").value.trim() || $("contribution-title").value === autoTitle) {
+        $("contribution-title").value = poi.title;
+        autoTitle = poi.title;
+      }
+      if (!$("contribution-lng").value && poi.category) $("contribution-category").value = poi.category;
     }
     $("contribution-lng").value = lngLat.lng.toFixed(6);
     $("contribution-lat").value = lngLat.lat.toFixed(6);
@@ -257,6 +291,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
   });
 
   async function ensureDraft() {
+    if (locationBusy) throw new Error("正在更新位置，请稍候");
     if (draftToken && draftExpiresAt > Date.now()) return { token: draftToken, expiresAt: new Date(draftExpiresAt).toISOString(), url: prefillDraftUrl(draftUrl) };
     const setup = mode === "new_entry"
       ? { type: "new_entry", mapId: getMapId(), placeId: targetPlace.id }
@@ -375,6 +410,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
   }
 
   function resetForm() {
+    autoTitle = "";
     $("contribution-form").reset();
     $("contribution-lng").value = "";
     $("contribution-lat").value = "";
@@ -403,7 +439,7 @@ export function createContributor({ map, showToast, closeOtherPanels, reloadData
     closeKeyRequest();
   }
 
-  return { handleMapClick, openForPlace, openForPoi, close };
+  return { handleMapClick, openForPlace, openForPoi, selectSearchResult, close };
 }
 
 function setBusy(button, busy) {

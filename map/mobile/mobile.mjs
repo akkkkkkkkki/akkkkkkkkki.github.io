@@ -3,6 +3,7 @@ import { MAPS } from "../js/maps.mjs";
 import { createMapStyle } from "../js/map-style.mjs?v=20261012-1";
 import { poiSelection, readDraftPrefill } from "../js/poi-selection.mjs";
 import { photoForm, processPhoto } from "../js/photo-processing.mjs";
+import { findPlaces, loadPoiIndex } from "../js/place-search.mjs";
 
 const $ = (id) => document.getElementById(id);
 const token = new URL(location.href).searchParams.get("draft") || "";
@@ -22,7 +23,9 @@ async function boot() {
   if (draft.status === "submitted") return showComplete(draft.result?.entryId ? "已发布" : "已提交", draft.result?.entryId ? "这条记录已经出现在地图上。" : "投稿已进入待审核。");
   if (draft.status === "cancelled") throw new Error("这次填写已经结束");
   if (draft.status === "expired") throw new Error("链接已过期，请在电脑上重新生成");
-  await markMobileDraftOpened(token);
+  const opened = await markMobileDraftOpened(token);
+  // Opening locks desktop location edits; use the coordinates returned after that lock.
+  if (opened.draft) draft = { ...opened.draft, photos: result.draft.photos };
   coordinates = draft.coordinates;
   photos = draft.photos || [];
   $("mobile-loading").hidden = true; $("mobile-form").hidden = false;
@@ -73,7 +76,12 @@ async function runSearch() {
   const keywords = $("place-search-input").value.trim(); if (!keywords) return;
   const button = $("place-search-button"); button.disabled = true;
   try {
-    const result = await searchPlaces(draft.mapId, keywords, coordinates);
+    let result;
+    try {
+      const local = findPlaces(keywords, await loadPoiIndex(draft.mapId), [], coordinates);
+      result = { results: local.map((place) => ({ ...place, name: place.title, address: "" })) };
+    } catch { /* The existing online search remains a fallback if the index cannot load. */ }
+    if (!result?.results.length) result = await searchPlaces(draft.mapId, keywords, coordinates);
     const box = $("search-results"); box.replaceChildren(); box.hidden = false;
     if (!result.results.length) box.textContent = "没有找到，可以使用手动选点";
     result.results.forEach((place) => {
@@ -81,7 +89,7 @@ async function runSearch() {
       const title = document.createElement("strong"); title.textContent = place.name;
       const address = document.createElement("small"); address.textContent = [place.address, formatDistance(place.distanceMeters)].filter(Boolean).join(" · ");
       item.append(title, address); item.addEventListener("click", async () => {
-        coordinates = place.coordinates; $("mobile-title").value ||= place.name; $("mobile-location-value").textContent = `${place.name} · ${place.address}`;
+        coordinates = place.coordinates; $("mobile-title").value ||= place.name; $("mobile-location-value").textContent = `${place.name} · ${place.address || ""}`;
         box.hidden = true; await showManualMap(); miniMap.jumpTo({ center: coordinates, zoom: 16 }); marker.setLngLat(coordinates); saveLocal();
       }); box.append(item);
     });
@@ -102,8 +110,7 @@ async function showManualMap() {
     if (poi && insideMap(poi.coordinates)) {
       coordinates = poi.coordinates;
       marker.setLngLat(coordinates);
-      $("mobile-title").value = poi.title;
-      $("mobile-category").value = poi.category;
+      if (!$("mobile-title").value.trim()) { $("mobile-title").value = poi.title; $("mobile-category").value = poi.category; }
       $("mobile-location-value").textContent = poi.title;
       saveLocal();
     } else { marker.setLngLat(event.lngLat); updateManual(event.lngLat); }

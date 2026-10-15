@@ -58,6 +58,10 @@ export async function markMobileDraftOpened(token) {
   return apiRequest(`/v1/mobile-drafts/${encodeURIComponent(token)}/opened`, {});
 }
 
+export async function updateDraftLocation(token, coordinates) {
+  return apiRequest(`/v1/mobile-drafts/${encodeURIComponent(token)}/location`, { coordinates });
+}
+
 export async function cancelMobileDraft(token) {
   return apiFetch(`/v1/mobile-drafts/${encodeURIComponent(token)}`, { method: "DELETE" });
 }

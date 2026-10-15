@@ -1,6 +1,7 @@
 import { buildCollectionLines, filterPlaces, getTagStats, toGeoJSON } from "./data-store.mjs";
 import { loadCloudMapData, loadMapData } from "./api-client.mjs";
-import { createContributor } from "./contributor.mjs?v=20261015-1";
+import { createContributor } from "./contributor.mjs?v=20261015-2";
+import { createSearchPanel } from "./search-panel.mjs";
 import { poiSelection } from "./poi-selection.mjs";
 import { createDataRefreshGate } from "./data-refresh.mjs";
 import { createMapStyle } from "./map-style.mjs?v=20261012-1";
@@ -18,6 +19,7 @@ const state = {
 let map;
 let popup;
 let contributor;
+let searchPanel;
 let toastTimer;
 const cloudRefresh = createDataRefreshGate(() => state.mapId);
 
@@ -63,7 +65,21 @@ async function boot() {
     showToast,
     closeOtherPanels: () => { closePanels(); closeDetails(); },
     reloadData,
-    getMapId: () => state.mapId
+    getMapId: () => state.mapId,
+    openLocationSearch: () => searchPanel.open("location")
+  });
+  searchPanel = createSearchPanel({
+    map, getMapId: () => state.mapId, getPlaces: () => state.data.places,
+    closeOtherPanels: () => { closePanels(); closeDetails(); },
+    onSelect: (place, intent) => {
+      if (intent === "location") {
+        void contributor.selectSearchResult(place);
+      } else if (place.placeId) {
+        selectPlace(place.placeId, true);
+        return;
+      } else { selectPlace(null); showPoi(place); }
+      map.easeTo({ center: place.coordinates, zoom: Math.max(map.getZoom(), 16), duration: reducedMotion() ? 0 : 520 });
+    }
   });
   renderAll();
   renderMapSwitch();
@@ -267,6 +283,7 @@ function bindPanelButton(buttonId, panelId) {
 function closePanels() {
   ["filter-panel", "collections-panel", "info-panel"].forEach((id) => closePanel(id));
   contributor?.close();
+  searchPanel?.close();
 }
 
 function closePanel(id) {
