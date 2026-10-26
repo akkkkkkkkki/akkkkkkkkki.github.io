@@ -3,6 +3,7 @@ import { loadCloudMapData, loadMapData } from "./api-client.mjs";
 import { createContributor } from "./contributor.mjs?v=20261015-2";
 import { createSearchPanel } from "./search-panel.mjs";
 import { poiSelection } from "./poi-selection.mjs";
+import { createPoiLabelDedup } from "./poi-label-dedup.mjs";
 import { createDataRefreshGate } from "./data-refresh.mjs";
 import { createMapStyle } from "./map-style.mjs?v=20261012-1";
 import { hidePanel, panelIsOpen, showPanel } from "./panel-motion.mjs";
@@ -20,6 +21,7 @@ let map;
 let popup;
 let contributor;
 let searchPanel;
+let poiLabelDedup;
 let toastTimer;
 const cloudRefresh = createDataRefreshGate(() => state.mapId);
 
@@ -57,6 +59,7 @@ async function boot() {
     else console.warn("Map resource error", event.error);
   });
   await once(map, "style.load");
+  poiLabelDedup = createPoiLabelDedup(map);
   addBusinessLayers();
   bindMapEvents();
   bindUI();
@@ -306,6 +309,7 @@ function renderAll() {
   if (!map?.getSource("places")) return;
   const places = currentPlaces();
   map.getSource("places").setData(toGeoJSON(places));
+  poiLabelDedup.update(places);
   renderTags();
   renderCollections();
   renderJournal(places);
